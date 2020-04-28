@@ -95,15 +95,19 @@ def build_file_list(args):
                 idx_categories.append(0)
         output = []
         for i in range(len(folders)):
-            curFolder = folders[i]
-            curIDX = idx_categories[i]
-            # counting the number of frames in each video folders
-            dir_files = os.listdir(os.path.join(args.frame_root, curFolder))
-            if len(dir_files) == 0:
-                print('video decoding fails at %s' (curFolder))
-                sys.exit()
-            output.append('%s %d %d' % (curFolder, len(dir_files), curIDX))
-            print('%d/%d' % (i, len(folders)))
+            # Ugly way of handling missing files, allows using smaller sets /Einar
+            try:
+                curFolder = folders[i]
+                curIDX = idx_categories[i]
+                # counting the number of frames in each video folders
+                dir_files = os.listdir(os.path.join(args.frame_root, curFolder))
+                if len(dir_files) == 0:
+                    print('video decoding fails at %s' (curFolder))
+                    sys.exit()
+                output.append('%s %d %d' % (curFolder, len(dir_files), curIDX))
+                print('%d/%d' % (i, len(folders)))
+            except FileNotFoundError:
+                pass
         with open(filename_output, 'w') as f:
             f.write('\n'.join(output))
 
