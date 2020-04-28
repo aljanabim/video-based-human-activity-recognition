@@ -1,7 +1,7 @@
 """Module for loading video files and tensors.
 
 Example:
-    loader = VideoLoader(dataset_root='./data/something-something-mini')
+    loader = VideoLoader(video_folder_path='./data/something-something-mini-frame')
     videos = loader.load_all_videos()
 
 """
@@ -14,18 +14,18 @@ class VideoLoader:
     """Used to load videos as numpy arrays."""
 
     def __init__(self, img_width=455, img_height=256,
-                 dataset_root='./data/something-something-mini'):
+                 video_folder_path='./data/something-something-mini-frame'):
         """Constructor."""
-        self.dataset_root = dataset_root
+        self.video_folder_path = video_folder_path
         self.img_width = img_width
         self.img_height = img_height
 
-    def load_all_videos(self, dir_path=None):
+    def load_all_videos(self, video_folder_path=None):
         """Load all videos in selected directory.
 
         Args:
-            dir_path: Path of directory of videos encoded as image frames. Defaults to
-            self.dataset_root if omitted.
+            video_folder_path: Path of directory of videos encoded as image frames. Defaults to
+            self.video_folder_path if omitted.
 
         Returns:
             List of dicts containing video samples. Each dict has keys id, data, and label. Id
@@ -35,11 +35,11 @@ class VideoLoader:
             integer label of the video.
 
         """
-        if not dir_path:
-            dir_path = '{}-frame'.format(self.dataset_root)
+        if not video_folder_path:
+            video_folder_path = self.video_folder_path
 
-        video_names = self._get_all_video_names(dir_path)
-        video_paths = ["{}/{}".format(dir_path, video_name) for video_name in video_names]
+        video_names = self._get_all_video_names(video_folder_path)
+        video_paths = ["{}/{}".format(video_folder_path, video_name) for video_name in video_names]
 
         videos = []
         for path in video_paths:
@@ -52,8 +52,8 @@ class VideoLoader:
 
         return samples
 
-    def _get_all_video_names(self, dir_path):
-        video_names = os.listdir(dir_path)
+    def _get_all_video_names(self, video_folder_path):
+        video_names = os.listdir(video_folder_path)
         return video_names
 
     def _load_video(self, frame_dir_path):
