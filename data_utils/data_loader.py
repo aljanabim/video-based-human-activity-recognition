@@ -2,7 +2,7 @@
 
 Example:
     from data_utils.data_loader import load_data()
-    data, label_dict = load_data("")"""
+    data, label_dict = load_data("../data/something-something-mini")"""
 try:
     from data_utils.metadata_loader import MetadataLoader
     from data_utils.video_loader import VideoLoader
