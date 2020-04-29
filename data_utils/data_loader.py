@@ -2,7 +2,9 @@
 
 Example:
     from data_utils.data_loader import load_data()
-    data, label_dict = load_data("../data/something-something-mini")"""
+    data, label_dict = load_data("../data/something-something-mini")
+
+"""
 try:
     from data_utils.metadata_loader import MetadataLoader
     from data_utils.video_loader import VideoLoader
@@ -29,6 +31,7 @@ def load_data(root_path):
               c is the number of channels.
 
         label_dict: dictionary mapping label indices to label descriptions.
+        
     """
     frame_path = "{}-frame".format(root_path)
     anno_path = "{}-anno".format(root_path)
