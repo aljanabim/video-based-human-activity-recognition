@@ -27,11 +27,11 @@ def load_data(root_path):
                       'valid': { -||- }
                       'test': { -||- }
               }
-              where n is the number of frames in the video, w is the video width, h is the video height, and
-              c is the number of channels.
+              where n is the number of frames in the video, w is the video width, h is the video
+              height, and c is the number of channels.
 
         label_dict: dictionary mapping label indices to label descriptions.
-        
+
     """
     frame_path = "{}-frame".format(root_path)
     anno_path = "{}-anno".format(root_path)
