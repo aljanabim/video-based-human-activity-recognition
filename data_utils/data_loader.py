@@ -18,8 +18,8 @@ def load_data(root_path):
         data: Data object which has the below format:
               data = {
                       'train': {
-                                id1: {'id': id1, 'label': int, 'video': Tensor(n, w, h, c)}
-                                id2: {'id': id2, 'label': int, 'video': Tensor(n, w, h, c)}
+                                id1: {'id': id1, 'action_label': int, 'video': Tensor(n, w, h, c)}
+                                id2: {'id': id2, 'action_label': int, 'video': Tensor(n, w, h, c)}
                                 ...
                       }
                       'valid': { -||- }
@@ -49,6 +49,9 @@ def load_data(root_path):
                                 'action_label': sample_metadata['action_label'],
                                 'data': videos[id]}
     return data, label_dict
+
+
+
 
 if __name__ == "__main__":
     data, label_dict = load_data("../data/something-something-mini")

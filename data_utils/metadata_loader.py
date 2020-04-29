@@ -42,7 +42,7 @@ class MetadataLoader:
                     values = line.split()
                     id = int(values[0])
                     valdict = {'n_frames': values[1],
-                               'action_label': values[2],
+                               'action_label': int(values[2]),
                                'object_labels': None,
                                'set_name': set_name}
                     subset_metadata[id] = valdict
