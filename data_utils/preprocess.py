@@ -26,7 +26,7 @@ def extract_frames_and_labels(dict_dataset, n_classes=None):
     frames = tf.concat(videos, 0)
 
     label_array = make_one_hot_encoding(labels, n_classes=n_classes)
-    label_tensor = tf.convert_to_tensor(label_array)
+    label_tensor = tf.convert_to_tensor(label_array, dtype=tf.int32)
     return frames, label_tensor
 
 
