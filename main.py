@@ -29,5 +29,44 @@ frames_dataset = tf.data.Dataset.from_tensor_slices((frames, labels))
 print(videos_dataset)
 print(frames_dataset)
 
+
 # Make tfrecords
-# TODO: make tf records
+
+def _tensor_to_bytes_feature(value):
+    if tf.executing_eagerly():
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value.numpy().tostring()]))
+    else:
+        print(value)
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value.numpy.tostring()]))
+
+
+def _int_feature(value):
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+
+def _serialize_frame_sample(frame, label):
+    # print(frame)
+    feature = {'frame': _tensor_to_bytes_feature(frame),
+               'label': _tensor_to_bytes_feature(label)}
+    return tf.train.Example(features=tf.train.Features(feature=feature)).SerializeToString()
+
+
+def tf_serialize_frame_sample(frame, label):
+    tf_string = tf.py_function(
+        _serialize_frame_sample,
+        (frame, label),
+        tf.string)
+    return tf.reshape(tf_string, ())
+
+
+for frame, label in frames_dataset.take(1):
+    # print(frame.numpy())
+    _serialize_frame_sample(frame, label)
+
+print("Starting serialization")
+serialized_frames_dataset = frames_dataset.map(tf_serialize_frame_sample)
+print("Serialization complete")
+record_file_path = "test.tfrecord"
+writer = tf.data.experimental.TFRecordWriter(record_file_path)
+writer.write(serialized_frames_dataset)
+print("TFRecord created")
