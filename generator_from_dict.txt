@@ -1,0 +1,22 @@
+import tensorflow as tf
+import numpy as np
+
+N = 100
+# dictionary of arrays:
+metadata = {'m1': np.zeros(shape=(N,2)), 'm2': np.ones(shape=(N,3,5))}
+num_samples = N
+
+def meta_dict_gen():
+    for i in range(num_samples):
+        ls = {}
+        for key, val in metadata.items():
+            ls[key] = val[i]
+        yield ls
+
+dataset = tf.data.Dataset.from_generator(
+    meta_dict_gen,
+    output_types={k: tf.float32 for k in metadata},
+    output_shapes={'m1': (2,), 'm2': (3, 5)})
+iter = dataset.make_one_shot_iterator()
+next_elem = iter.get_next()
+print(next_elem)
