@@ -13,7 +13,7 @@ import json
 class MetadataLoader:
     """Used to load videos as numpy arrays."""
 
-    def __init__(self, label_folder_path='./data/something-something-mini-anno'):
+    def __init__(self, label_folder_path='../data/something-something-mini-anno'):
         """Constructor."""
         self.label_folder_path = label_folder_path
 
