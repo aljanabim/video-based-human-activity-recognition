@@ -114,7 +114,7 @@ class DatasetBuilder:
 
         # creates dataset containing datasets of frame paths
         frame_folder_dataset = frame_folder_paths_dataset.map(
-            _dataset_from_folder, num_parallel_calls=self.autotune)
+            self._dataset_from_folder, num_parallel_calls=self.autotune)
 
         # creates list of labels
         action_labels = [metadata['train'][int(id)]['action_label'] for id in video_id_list]
@@ -122,19 +122,25 @@ class DatasetBuilder:
             tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
 
         # build functions to process images and apply map
-        process_path_function = _build_process_path_function(
+        process_path_function = self._build_process_path_function(
             action_label_table, self.img_width, self.img_height)
-        stack_images_from_path_function = _build_stack_images_from_path_function(
+        stack_images_from_path_function = self._build_stack_images_from_path_function(
             process_path_function)
         video_dataset = frame_folder_dataset.map(
             stack_images_from_path_function, num_parallel_calls=self.autotune)
 
         # build padding function and apply
-        pad_function = _build_pad_function(self.max_frames)
+        pad_function = self._build_pad_function(self.max_frames)
         padded_videos_dataset = video_dataset.map(pad_function)
 
         return padded_videos_dataset
 
+    def make_frame_dataset(self, frame_folder_paths):
+        # creates a dataset containing frame folder paths
+        frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
+
+
+        #TODO: Implement
 
 if __name__ == '__main__':
     """Example, will probably only work on windows."""
@@ -162,4 +168,4 @@ if __name__ == '__main__':
     video_dataset = builder.make_video_dataset(frame_folder_paths)
 
     for paded_stacked_img, label in video_dataset:
-        print("shape:", paded_stacked_img.shape, "label:",label.numpy())
+        print("shape:", paded_stacked_img.shape, "label:", label.numpy())
