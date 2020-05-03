@@ -1,0 +1,165 @@
+r"""Module for building datasets that load procedurally from drive.
+
+Example:
+    # define paths
+    root_path = ".\\data\\something-something-mini"
+    anno_path = "{}-anno".format(root_path)
+    frame_path = "{}-frame".format(root_path)
+
+    # get metadata
+    metadata_loader = MetadataLoader(label_folder_path=anno_path)
+    metadata = metadata_loader.load_metadata()
+
+    # get ids for videos in frame folder
+    video_ids = os.listdir(frame_path)
+    train_video_ids = [id for id in video_ids if int(id) in metadata['train']]
+    video_id_list = train_video_ids
+
+    frame_folder_paths = [frame_path + "\\" + id for id in video_id_list]
+
+    builder = DatasetBuilder(max_frames=70,
+                             n_classes=174,
+                             img_width=455,
+                             img_height=256)
+
+    video_dataset = builder.make_video_dataset(frame_folder_paths)
+
+    for paded_stacked_img, label in video_dataset:
+        print("shape:", paded_stacked_img.shape, "label:",label.numpy())
+
+"""
+
+from data_utils.metadata_loader import MetadataLoader
+import tensorflow as tf
+import os
+
+
+class DatasetBuilder:
+    """Used to build datasets."""
+
+    def __init__(self, max_frames, n_classes, img_width, img_height):
+        self.max_frames = max_frames
+        self.n_classes = n_classes
+        self.img_width = img_width
+        self.img_height = img_height
+        self.autotune = tf.data.experimental.AUTOTUNE
+
+    def _build_process_path_function(self, action_label_table, img_width, img_height):
+
+        def _process_path(file_path):
+
+            def _get_label(file_path):
+                # convert the path to a list of path components
+                parts = tf.strings.split(file_path, sep="\\")
+                # The second to last is the class-directory
+                return action_label_table.lookup(parts[-2])
+
+            def _decode_image(frame):  # from einar's script
+                frame = tf.image.decode_jpeg(frame, channels=3)
+                frame = tf.image.convert_image_dtype(frame, tf.float32)
+                return tf.image.resize(frame, [img_width, img_height])
+
+            # ------------------------------------------------
+            label = _get_label(file_path)
+            img = tf.io.read_file(file_path)  # from einar's script
+            img = _decode_image(img)
+            return img, label
+
+        return _process_path
+
+    def _build_stack_images_from_path_function(self, process_path_function):
+
+        def _stack_images_from_path(ds):
+            labeled_ds = ds.map(process_path_function, num_parallel_calls=self.autotune)
+
+            # temp variables
+            label = tf.constant(0, dtype=tf.int32)
+            i = tf.constant(0)
+            imgs_combined = tf.TensorArray(dtype=tf.float32, size=1, dynamic_size=True,
+                                           clear_after_read=False)
+
+            for im, labels in labeled_ds:
+                imgs_combined = imgs_combined.write(i, im)
+                label = labels
+                i = tf.add(i, 1)
+
+            return imgs_combined.stack(), label
+
+        return _stack_images_from_path
+
+    def _dataset_from_folder(self, file):
+        return tf.data.Dataset.list_files(file+"\\*", shuffle=False)
+
+    def _build_pad_function(self, max_frames):
+
+        def _pad(stacked_im, label):
+            nr = max_frames - stacked_im.get_shape().as_list()[0]
+
+            paddings = tf.constant([[0, nr], [0, 0], [0,0], [0,0]])
+            new = tf.pad(stacked_im, paddings,"CONSTANT")
+            return new, label
+
+        def _pad_fn(stacked_im, label):
+            padded_im, label = tf.py_function(_pad,
+                                              inp=[stacked_im, label],
+                                              Tout=(tf.float32, tf.int32))
+            return padded_im, label
+
+        return _pad_fn
+
+    def make_video_dataset(self, frame_folder_paths):
+        """Take list of frame folder paths and return dataset with videos."""
+        # creates a dataset containing frame folder paths
+        frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
+
+        # creates dataset containing datasets of frame paths
+        frame_folder_dataset = frame_folder_paths_dataset.map(
+            _dataset_from_folder, num_parallel_calls=self.autotune)
+
+        # creates list of labels
+        action_labels = [metadata['train'][int(id)]['action_label'] for id in video_id_list]
+        action_label_table = tf.lookup.StaticHashTable(
+            tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
+
+        # build functions to process images and apply map
+        process_path_function = _build_process_path_function(
+            action_label_table, self.img_width, self.img_height)
+        stack_images_from_path_function = _build_stack_images_from_path_function(
+            process_path_function)
+        video_dataset = frame_folder_dataset.map(
+            stack_images_from_path_function, num_parallel_calls=self.autotune)
+
+        # build padding function and apply
+        pad_function = _build_pad_function(self.max_frames)
+        padded_videos_dataset = video_dataset.map(pad_function)
+
+        return padded_videos_dataset
+
+
+if __name__ == '__main__':
+    """Example, will probably only work on windows."""
+    # define paths
+    root_path = ".\\data\\something-something-mini"
+    anno_path = "{}-anno".format(root_path)
+    frame_path = "{}-frame".format(root_path)
+
+    # get metadata
+    metadata_loader = MetadataLoader(label_folder_path=anno_path)
+    metadata = metadata_loader.load_metadata()
+
+    # get ids for videos in frame folder
+    video_ids = os.listdir(frame_path)
+    train_video_ids = [id for id in video_ids if int(id) in metadata['train']]
+    video_id_list = train_video_ids
+
+    frame_folder_paths = [frame_path + "\\" + id for id in video_id_list]
+
+    builder = DatasetBuilder(max_frames=70,
+                             n_classes=174,
+                             img_width=455,
+                             img_height=256)
+
+    video_dataset = builder.make_video_dataset(frame_folder_paths)
+
+    for paded_stacked_img, label in video_dataset:
+        print("shape:", paded_stacked_img.shape, "label:",label.numpy())
