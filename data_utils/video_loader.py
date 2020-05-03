@@ -14,7 +14,7 @@ class VideoLoader:
     """Used to load videos as numpy arrays."""
 
     def __init__(self, img_width=455, img_height=256,
-                 video_folder_path='./data/something-something-mini-frame'):
+                 video_folder_path='../data/something-something-mini-frame'):
         """Constructor."""
         self.video_folder_path = video_folder_path
         self.img_width = img_width
@@ -75,8 +75,8 @@ class VideoLoader:
 if __name__ == "__main__":
     loader = VideoLoader()
     videos = loader.load_all_videos()
-    vid = videos[0]
+    vid = videos[2]
     print("--- Video Loader ---")
     print("Number of videos loaded: {}".format(len(videos)))
     print("Example video:\nID: {}, type: {}, shape: {}".format(
-        vid['id'], type(vid['data']), vid['data'].shape))
+        2, type(vid), vid.shape))

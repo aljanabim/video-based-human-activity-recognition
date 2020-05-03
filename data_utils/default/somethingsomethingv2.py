@@ -3,6 +3,13 @@ The code is largely borrowed from https://github.com/MIT-HAN-LAB/temporal-shift-
 and https://github.com/metalbubble/TRN-pytorch/blob/master/process_dataset.py
 """
 
+####
+"""
+python3 somethingsomethingv2.py --video_root=../../data/something-something-mini-video
+                                --frame_root=../../data/something-something-mini-fram2
+                                --anno_root=../../data/something-something-mini-anno2
+"""
+
 import os
 import sys
 import threading
@@ -11,9 +18,10 @@ import json
 
 def parse_args():
     parser = argparse.ArgumentParser(description='prepare something-something-v2 dataset')
-    parser.add_argument('--video_root', type=str, default='~/.mxnet/datasets/somethingsomethingv2/20bn-something-something-v2')
-    parser.add_argument('--frame_root', type=str, default='~/.mxnet/datasets/somethingsomethingv2/20bn-something-something-v2-frames')
-    parser.add_argument('--anno_root', type=str, default='~/.mxnet/datasets/somethingsomethingv2/annotations')
+    parser.add_argument('--video_root', type=str, default='../../data/something-something-mini-video')
+    parser.add_argument('--frame_root', type=str, default='../../data/something-something-mini-fram2')
+    parser.add_argument('--anno_root', type=str, default='../../data/something-something-mini-anno')
+    parser.add_argument('--frame_nr', type=int, default=40)
     parser.add_argument('--num_threads', type=int, default=100)
     parser.add_argument('--decode_video', action='store_true', default=True)
     parser.add_argument('--build_file_list', action='store_true', default=True)

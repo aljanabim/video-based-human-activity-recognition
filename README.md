@@ -11,6 +11,7 @@ The important parts of the code are organized as follows.
 
 ```
 main.py                          # main script (maybe parse arguments here too)
+Requirements.py                  # file with the dependencies
 
 data_utils
 ├── data_loader.py               # loader for the something-something v2 dataset
