@@ -37,11 +37,13 @@ import os
 class DatasetBuilder:
     """Used to build datasets."""
 
-    def __init__(self, max_frames, n_classes, img_width, img_height):
+    def __init__(self, max_frames, n_classes, img_width, img_height, frame_path, metadata):
         self.max_frames = max_frames
         self.n_classes = n_classes
         self.img_width = img_width
         self.img_height = img_height
+        self.frame_path = frame_path
+        self.metadata = metadata
         self.autotune = tf.data.experimental.AUTOTUNE
 
     def _build_process_path_function(self, action_label_table, img_width, img_height):
@@ -107,9 +109,11 @@ class DatasetBuilder:
 
         return _pad_fn
 
-    def make_video_dataset(self, frame_folder_paths):
+    def make_video_dataset(self, video_id_list):
         """Take list of frame folder paths and return dataset with videos."""
+
         # creates a dataset containing frame folder paths
+        frame_folder_paths = [self.frame_path + "\\" + id for id in video_id_list]
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
 
         # creates dataset containing datasets of frame paths
@@ -117,7 +121,7 @@ class DatasetBuilder:
             self._dataset_from_folder, num_parallel_calls=self.autotune)
 
         # creates list of labels
-        action_labels = [metadata['train'][int(id)]['action_label'] for id in video_id_list]
+        action_labels = [self.metadata['train'][int(id)]['action_label'] for id in video_id_list]
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
 
@@ -138,6 +142,11 @@ class DatasetBuilder:
     def make_frame_dataset(self, frame_folder_paths):
         # creates a dataset containing frame folder paths
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
+        frame_path_subdatasets = [_dataset_from_folder(path) for path in frame_folder_paths]
+
+        frame_path_dataset = frame_path_subdatasets.pop()
+        while frame_path_subdatasets:
+            frame_path_dataset.concatenate(frame_path_subdatasets.pop())
 
 
         #TODO: Implement
@@ -158,12 +167,12 @@ if __name__ == '__main__':
     train_video_ids = [id for id in video_ids if int(id) in metadata['train']]
     video_id_list = train_video_ids
 
-    frame_folder_paths = [frame_path + "\\" + id for id in video_id_list]
-
     builder = DatasetBuilder(max_frames=70,
                              n_classes=174,
                              img_width=455,
-                             img_height=256)
+                             img_height=256,
+                             frame_path=frame_path,
+                             metadata=metadata)
 
     video_dataset = builder.make_video_dataset(frame_folder_paths)
 
