@@ -15,17 +15,23 @@ Example:
     train_video_ids = [id for id in video_ids if int(id) in metadata['train']]
     video_id_list = train_video_ids
 
-    frame_folder_paths = [frame_path + "\\" + id for id in video_id_list]
-
     builder = DatasetBuilder(max_frames=70,
                              n_classes=174,
                              img_width=455,
-                             img_height=256)
+                             img_height=256,
+                             frame_path=frame_path,
+                             metadata=metadata['train'])
 
-    video_dataset = builder.make_video_dataset(frame_folder_paths)
+    video_dataset = builder.make_video_dataset(video_id_list)
+    frame_dataset = builder.make_frame_dataset(video_id_list)
 
-    for paded_stacked_img, label in video_dataset:
-        print("shape:", paded_stacked_img.shape, "label:",label.numpy())
+    print("=== VIDEOS ===")
+    for video, label in video_dataset:
+        print("shape:", video.shape, "label:", label.numpy())
+
+    print("=== FRAMES ===")
+    for frame, label in frame_dataset:
+        print("shape:", frame.shape, "label:", label.numpy())
 
 """
 
@@ -121,7 +127,7 @@ class DatasetBuilder:
             self._dataset_from_folder, num_parallel_calls=self.autotune)
 
         # creates list of labels
-        action_labels = [self.metadata['train'][int(id)]['action_label'] for id in video_id_list]
+        action_labels = [self.metadata[int(id)]['action_label'] for id in video_id_list]
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
 
@@ -139,20 +145,33 @@ class DatasetBuilder:
 
         return padded_videos_dataset
 
-    def make_frame_dataset(self, frame_folder_paths):
+    def make_frame_dataset(self, video_id_list):
+        frame_folder_paths = [self.frame_path + "\\" + id for id in video_id_list]
+
         # creates a dataset containing frame folder paths
-        frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
-        frame_path_subdatasets = [_dataset_from_folder(path) for path in frame_folder_paths]
+        frame_path_subdatasets = [self._dataset_from_folder(path) for path in frame_folder_paths]
 
         frame_path_dataset = frame_path_subdatasets.pop()
         while frame_path_subdatasets:
-            frame_path_dataset.concatenate(frame_path_subdatasets.pop())
+            frame_path_dataset = frame_path_dataset.concatenate(frame_path_subdatasets.pop())
 
+        # for path in frame_path_dataset:
+        #     print(path)
 
-        #TODO: Implement
+        # creates list of labels
+        action_labels = [self.metadata[int(id)]['action_label'] for id in video_id_list]
+        action_label_table = tf.lookup.StaticHashTable(
+            tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
+
+        process_path_function = self._build_process_path_function(
+            action_label_table, self.img_width, self.img_height)
+
+        frame_dataset = frame_path_dataset.map(process_path_function)
+
+        return frame_dataset
+
 
 if __name__ == '__main__':
-    """Example, will probably only work on windows."""
     # define paths
     root_path = ".\\data\\something-something-mini"
     anno_path = "{}-anno".format(root_path)
@@ -172,9 +191,15 @@ if __name__ == '__main__':
                              img_width=455,
                              img_height=256,
                              frame_path=frame_path,
-                             metadata=metadata)
+                             metadata=metadata['train'])
 
-    video_dataset = builder.make_video_dataset(frame_folder_paths)
+    video_dataset = builder.make_video_dataset(video_id_list)
+    frame_dataset = builder.make_frame_dataset(video_id_list)
 
-    for paded_stacked_img, label in video_dataset:
-        print("shape:", paded_stacked_img.shape, "label:", label.numpy())
+    print("=== VIDEOS ===")
+    for video, label in video_dataset:
+        print("shape:", video.shape, "label:", label.numpy())
+
+    print("=== FRAMES ===")
+    for frame, label in frame_dataset:
+        print("shape:", frame.shape, "label:", label.numpy())
