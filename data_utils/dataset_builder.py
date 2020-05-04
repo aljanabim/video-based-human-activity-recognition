@@ -50,12 +50,11 @@ class DatasetBuilder:
         self.frame_path = frame_path
         self.autotune = tf.data.experimental.AUTOTUNE
 
-    def _build_process_path_function(self, action_label_table, img_width, img_height):
+    def _build_process_path_function(self, action_label_table, img_width, img_height, n_classes):
 
         def _make_one_hot_encoding(label_integer):
             """Take labels encoded as ints and return one-hot encoded array."""
-            n_classes = tf.cast(action_label_table.size(), tf.int32)
-            label_tensor = tf.one_hot(label_integer, n_classes)
+            label_tensor = tf.one_hot(label_integer, n_classes, dtype=tf.int32)
             return label_tensor
 
         def _get_label(file_path):
@@ -72,10 +71,10 @@ class DatasetBuilder:
         def _process_path(file_path):
             # ------------------------------------------------
             label = _get_label(file_path)
-            # label_tensor = _make_one_hot_encoding(label)
+            label_tensor = _make_one_hot_encoding(label)
             img = tf.io.read_file(file_path)  # from einar's script
             img = _decode_image(img)
-            return img, label
+            return img, label_tensor
 
         return _process_path
 
@@ -90,9 +89,11 @@ class DatasetBuilder:
             imgs_combined = tf.TensorArray(dtype=tf.float32, size=1, dynamic_size=True,
                                            clear_after_read=False)
 
+            for _, first_label in labeled_ds.take(1):
+                label = first_label
+
             for im, labels in labeled_ds:
                 imgs_combined = imgs_combined.write(i, im)
-                label = labels
                 i = tf.add(i, 1)
 
             return imgs_combined.stack(), label
@@ -137,7 +138,7 @@ class DatasetBuilder:
 
         # build functions to process images and apply map
         process_path_function = self._build_process_path_function(
-            action_label_table, self.img_width, self.img_height)
+            action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
         stack_images_from_path_function = self._build_stack_images_from_path_function(
             process_path_function)
         video_dataset = frame_folder_dataset.map(
@@ -169,7 +170,7 @@ class DatasetBuilder:
             tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
 
         process_path_function = self._build_process_path_function(
-            action_label_table, self.img_width, self.img_height)
+            action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
 
         frame_dataset = frame_path_dataset.map(process_path_function)
 
@@ -205,5 +206,6 @@ if __name__ == '__main__':
         print("shape:", video.shape, "label:", label.numpy())
 
     print("=== FRAMES ===")
-    for frame, label in frame_dataset:
+    for frame, label in frame_dataset.take(1):
+        print(label.numpy())
         print("shape:", frame.shape, "label:", label.numpy())
