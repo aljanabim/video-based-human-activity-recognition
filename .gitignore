@@ -1,5 +1,10 @@
 *.webm
 *.pyc
+*.jpg
 /__pycache__/
 logs
-data/*
+*/data/*
+data/*/*
+data/*/*/*
+data/*/*/*/*
+data/*/*/*/*/*
