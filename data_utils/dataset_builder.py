@@ -59,7 +59,7 @@ class DatasetBuilder:
 
         def _get_label(file_path):
             # convert the path to a list of path components
-            parts = tf.strings.split(file_path, sep="\\")
+            parts = tf.strings.split(file_path, sep="/")
             # The second to last is the class-directory
             return action_label_table.lookup(parts[-2])
 
@@ -101,7 +101,7 @@ class DatasetBuilder:
         return _stack_images_from_path
 
     def _dataset_from_folder(self, file):
-        return tf.data.Dataset.list_files(file+"\\*", shuffle=False)
+        return tf.data.Dataset.list_files(file+"/*", shuffle=False)
 
     def _build_pad_function(self, max_frames):
 
@@ -124,7 +124,7 @@ class DatasetBuilder:
         """Take list of frame folder paths and return dataset with videos."""
 
         # creates a dataset containing frame folder paths
-        frame_folder_paths = [self.frame_path + "\\" + id for id in video_id_list]
+        frame_folder_paths = [self.frame_path + "/" + id for id in video_id_list]
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
 
         # creates dataset containing datasets of frame paths
@@ -152,11 +152,12 @@ class DatasetBuilder:
 
     def make_frame_dataset(self, video_id_list, metadata):
         """Take list of frame folder paths and return dataset with frames."""
-        frame_folder_paths = [self.frame_path + "\\" + id for id in video_id_list]
+        frame_folder_paths = [self.frame_path + "/" + id for id in video_id_list]
 
         # creates a dataset containing frame folder paths
         frame_path_subdatasets = [self._dataset_from_folder(path) for path in frame_folder_paths]
 
+        if len(frame_path_subdatasets)==0: return
         frame_path_dataset = frame_path_subdatasets.pop()
         while frame_path_subdatasets:
             frame_path_dataset = frame_path_dataset.concatenate(frame_path_subdatasets.pop())
@@ -179,7 +180,7 @@ class DatasetBuilder:
 
 if __name__ == '__main__':
     # define paths
-    root_path = ".\\data\\something-something-mini"
+    root_path = "./data/something-something-mini"
     anno_path = "{}-anno".format(root_path)
     frame_path = "{}-frame".format(root_path)
 

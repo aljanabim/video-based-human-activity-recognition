@@ -5,6 +5,11 @@ Example:
     data, label_dict = load_data("../data/something-something-mini")
 
 """
+import sys
+sys.path.append('../')
+from config import Config
+
+
 try:
     from data_utils.metadata_loader import MetadataLoader
     from data_utils.video_loader import VideoLoader
@@ -13,7 +18,7 @@ except ModuleNotFoundError:
     from video_loader import VideoLoader
 
 
-def load_data(root_path):
+def load_data(config):
     """Return object containing all data contained in folders with the given root.
 
     Returns:
@@ -33,12 +38,10 @@ def load_data(root_path):
         label_dict: dictionary mapping label indices to label descriptions.
 
     """
-    frame_path = "{}-frame".format(root_path)
-    anno_path = "{}-anno".format(root_path)
 
-    video_loader = VideoLoader(img_width=455, img_height=256, video_folder_path=frame_path)
+    video_loader = VideoLoader(img_width=455, img_height=256, video_folder_path=config.frame_path)
     videos = video_loader.load_all_videos()
-    metadata_loader = MetadataLoader(label_folder_path=anno_path)
+    metadata_loader = MetadataLoader(label_folder_path=config.anno_path)
     metadata = metadata_loader.load_metadata()
     label_dict = metadata_loader.get_label_dict()
 
@@ -57,5 +60,6 @@ def load_data(root_path):
 
 
 if __name__ == "__main__":
-    data, label_dict = load_data("../data/something-something-mini")
+    config = Config()
+    data, label_dict = load_data(config)
     data['train']

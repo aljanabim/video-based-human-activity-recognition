@@ -10,9 +10,11 @@ python3 somethingsomethingv2.py --video_root=../../data/something-something-mini
                                 --frame_root=../../data/something-something-mini-fram2
                                 --anno_root=../../data/something-something-mini-anno2
 """
+import sys
+sys.path.append('../')
+from config import Config
 
 import os
-import sys
 import threading
 import argparse
 import json

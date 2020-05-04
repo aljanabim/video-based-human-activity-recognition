@@ -1,7 +1,3 @@
-import sys
-sys.path.append('../')
-
-from config import Config
 from data_utils import video_to_frames
 from data_utils import metadata_loader
 from data_utils import dataset_builder
