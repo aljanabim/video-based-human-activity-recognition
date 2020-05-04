@@ -2,11 +2,10 @@ from data_utils import video_to_frames
 from data_utils import metadata_loader
 from data_utils import dataset_builder
 import os
-
-import matplotlib.pyplot as plt
-plt.style.use('ggplot')
-
 import tensorflow as tf
+import matplotlib.pyplot as plt
+
+plt.style.use('ggplot')
 
 # Data hyperparams
 max_frames = 80
@@ -46,13 +45,18 @@ valid_dataset = db.make_frame_dataset(valid_video_ids, metadata['valid'])
 test_dataset = db.make_frame_dataset(test_video_ids, metadata['test'])
 
 # Build model
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Conv2D(16, 3, padding='same', activation='relu',
+                           input_shape=(img_height, img_width, 3)),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(512, activation='relu'),
+    tf.keras.layers.Dense(n_classes)])
+model.compile(optimizer='adam',
+              loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+model.summary()
 
-for sample in train_dataset.take(1):
-    print(sample[1].numpy())
-
-model = tf.keras.Sequential([
-    tf.keras.Conv2D(16, 3, paddin='same', activation='relu', input_shape=(img_height, img_width, 3)),
-    tf.keras.Flatten(),
-    tf.keras.Dense(512, activation='relu'),
-    Dense
-])
+# Train model
+train_dataset = train_dataset.shuffle(buffer_size=100)
+train_dataset = train_dataset.batch(20)
+model.fit(train_dataset, epochs=2)
