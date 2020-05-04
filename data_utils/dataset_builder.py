@@ -52,21 +52,27 @@ class DatasetBuilder:
 
     def _build_process_path_function(self, action_label_table, img_width, img_height):
 
+        def _make_one_hot_encoding(label_integer):
+            """Take labels encoded as ints and return one-hot encoded array."""
+            n_classes = tf.cast(action_label_table.size(), tf.int32)
+            label_tensor = tf.one_hot(label_integer, n_classes)
+            return label_tensor
+
+        def _get_label(file_path):
+            # convert the path to a list of path components
+            parts = tf.strings.split(file_path, sep="\\")
+            # The second to last is the class-directory
+            return action_label_table.lookup(parts[-2])
+
+        def _decode_image(frame):  # from einar's script
+            frame = tf.image.decode_jpeg(frame, channels=3)
+            frame = tf.image.convert_image_dtype(frame, tf.float32)
+            return tf.image.resize(frame, [img_width, img_height])
+
         def _process_path(file_path):
-
-            def _get_label(file_path):
-                # convert the path to a list of path components
-                parts = tf.strings.split(file_path, sep="\\")
-                # The second to last is the class-directory
-                return action_label_table.lookup(parts[-2])
-
-            def _decode_image(frame):  # from einar's script
-                frame = tf.image.decode_jpeg(frame, channels=3)
-                frame = tf.image.convert_image_dtype(frame, tf.float32)
-                return tf.image.resize(frame, [img_width, img_height])
-
             # ------------------------------------------------
             label = _get_label(file_path)
+            # label_tensor = _make_one_hot_encoding(label)
             img = tf.io.read_file(file_path)  # from einar's script
             img = _decode_image(img)
             return img, label
@@ -144,6 +150,7 @@ class DatasetBuilder:
         return padded_videos_dataset
 
     def make_frame_dataset(self, video_id_list, metadata):
+        """Take list of frame folder paths and return dataset with frames."""
         frame_folder_paths = [self.frame_path + "\\" + id for id in video_id_list]
 
         # creates a dataset containing frame folder paths
