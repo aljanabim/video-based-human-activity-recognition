@@ -19,11 +19,10 @@ Example:
                              n_classes=174,
                              img_width=455,
                              img_height=256,
-                             frame_path=frame_path,
-                             metadata=metadata['train'])
+                             frame_path=frame_path)
 
-    video_dataset = builder.make_video_dataset(video_id_list)
-    frame_dataset = builder.make_frame_dataset(video_id_list)
+    video_dataset = builder.make_video_dataset(video_id_list, metadata['train'])
+    frame_dataset = builder.make_frame_dataset(video_id_list, metadata['train'])
 
     print("=== VIDEOS ===")
     for video, label in video_dataset:
@@ -43,13 +42,12 @@ import os
 class DatasetBuilder:
     """Used to build datasets."""
 
-    def __init__(self, max_frames, n_classes, img_width, img_height, frame_path, metadata):
+    def __init__(self, max_frames, n_classes, img_width, img_height, frame_path):
         self.max_frames = max_frames
         self.n_classes = n_classes
         self.img_width = img_width
         self.img_height = img_height
         self.frame_path = frame_path
-        self.metadata = metadata
         self.autotune = tf.data.experimental.AUTOTUNE
 
     def _build_process_path_function(self, action_label_table, img_width, img_height):
@@ -115,7 +113,7 @@ class DatasetBuilder:
 
         return _pad_fn
 
-    def make_video_dataset(self, video_id_list):
+    def make_video_dataset(self, video_id_list, metadata):
         """Take list of frame folder paths and return dataset with videos."""
 
         # creates a dataset containing frame folder paths
@@ -127,7 +125,7 @@ class DatasetBuilder:
             self._dataset_from_folder, num_parallel_calls=self.autotune)
 
         # creates list of labels
-        action_labels = [self.metadata[int(id)]['action_label'] for id in video_id_list]
+        action_labels = [metadata[int(id)]['action_label'] for id in video_id_list]
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
 
@@ -145,7 +143,7 @@ class DatasetBuilder:
 
         return padded_videos_dataset
 
-    def make_frame_dataset(self, video_id_list):
+    def make_frame_dataset(self, video_id_list, metadata):
         frame_folder_paths = [self.frame_path + "\\" + id for id in video_id_list]
 
         # creates a dataset containing frame folder paths
@@ -159,7 +157,7 @@ class DatasetBuilder:
         #     print(path)
 
         # creates list of labels
-        action_labels = [self.metadata[int(id)]['action_label'] for id in video_id_list]
+        action_labels = [metadata[int(id)]['action_label'] for id in video_id_list]
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
 
@@ -190,11 +188,10 @@ if __name__ == '__main__':
                              n_classes=174,
                              img_width=455,
                              img_height=256,
-                             frame_path=frame_path,
-                             metadata=metadata['train'])
+                             frame_path=frame_path)
 
-    video_dataset = builder.make_video_dataset(video_id_list)
-    frame_dataset = builder.make_frame_dataset(video_id_list)
+    video_dataset = builder.make_video_dataset(video_id_list, metadata['train'])
+    frame_dataset = builder.make_frame_dataset(video_id_list, metadata['train'])
 
     print("=== VIDEOS ===")
     for video, label in video_dataset:
