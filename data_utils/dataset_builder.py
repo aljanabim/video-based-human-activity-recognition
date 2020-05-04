@@ -35,6 +35,8 @@ Example:
 """
 import sys
 sys.path.append('../')
+sys.path.append('.')
+
 from config import Config
 
 from data_utils.metadata_loader import MetadataLoader

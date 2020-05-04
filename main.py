@@ -2,15 +2,17 @@ from data_utils import data_loader
 from data_utils import preprocess
 from data_utils import records
 import tensorflow as tf
+from config import Config
+import os
 
-N_CLASSES = 174
+config = Config()
 
 # Load data from disk
-data, label_dict = data_loader.load_data("./data/something-something-mini")
+data, label_dict = data_loader.load_data(config)
 
 # Extract data and labels
-videos, labels = preprocess.extract_videos_and_labels(data['train'], n_classes=N_CLASSES)
-frames, labels = preprocess.extract_frames_and_labels(data['train'], n_classes=N_CLASSES)
+videos, labels = preprocess.extract_videos_and_labels(data['train'], n_classes=config.n_classes)
+frames, labels = preprocess.extract_frames_and_labels(data['train'], n_classes=config.n_classes)
 
 # Find relevant dimensions
 example_frame = frames[0]
@@ -28,6 +30,8 @@ videos_dataset = tf.data.Dataset.from_generator(
 frames_dataset = tf.data.Dataset.from_tensor_slices((frames, labels))
 
 # Make tfrecords
+if not os.path.exists(config.record_output):
+    os.makedirs(config.record_output)
 records.serialize_dataset(dataset=frames_dataset,
-                          output_directory='../test_records',
+                          output_directory=config.record_output+'record',
                           name="test-1")

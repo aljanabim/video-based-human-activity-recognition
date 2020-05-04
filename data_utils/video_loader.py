@@ -7,6 +7,8 @@ Example:
 """
 import sys
 sys.path.append('../')
+sys.path.append('.')
+
 from config import Config
 
 import tensorflow as tf

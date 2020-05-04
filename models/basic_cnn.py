@@ -1,5 +1,8 @@
 import sys
 sys.path.append('../')
+sys.path.append('.')
+print(sys.path)
+#from config import Config
 
 from config import Config
 from data_utils import video_to_frames
@@ -11,37 +14,24 @@ import matplotlib.pyplot as plt
 
 plt.style.use('ggplot')
 
-# Data hyperparams
-max_frames = 80
-n_classes = 174
-img_width = 84
-img_height = 84
+# hyperparams
+config = Config()
 
 # Decode videos
-videos_path = './data/something-something-mini-video'
-json_path = './data/something-something-mini-anno'
-output_path = './data/testdata'
-video_to_frames.decode_videos(videos_path, json_path, output_path,
-                              img_width=img_width, img_height=img_height)
+video_to_frames.decode_videos(config)
 
 # Get metadata
-frames_path = output_path + "/frames"
-labels_path = output_path + "/labels"
-ml = metadata_loader.MetadataLoader(label_folder_path=labels_path)
+ml = metadata_loader.MetadataLoader(config)
 metadata = ml.load_metadata()
 
 # Get video id sets
-video_ids = os.listdir(frames_path)
+video_ids = os.listdir(config.frame_path)
 train_video_ids = [id for id in video_ids if int(id) in metadata['train']]
 valid_video_ids = [id for id in video_ids if int(id) in metadata['valid']]
 test_video_ids = [id for id in video_ids if int(id) in metadata['test']]
 
 # Setup dataset builder
-db = dataset_builder.DatasetBuilder(max_frames=max_frames,
-                                    n_classes=n_classes,
-                                    img_width=img_width,
-                                    img_height=img_height,
-                                    frame_path=frames_path)
+db = dataset_builder.DatasetBuilder(config)
 
 # Build datasets
 train_dataset = db.make_frame_dataset(train_video_ids, metadata['train'])
@@ -51,10 +41,10 @@ test_dataset = db.make_frame_dataset(test_video_ids, metadata['test'])
 # Build model
 model = tf.keras.models.Sequential([
     tf.keras.layers.Conv2D(16, 3, padding='same', activation='relu',
-                           input_shape=(img_height, img_width, 3)),
+                           input_shape=(config.img_height, config.img_width, 3)),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(512, activation='relu'),
-    tf.keras.layers.Dense(n_classes)])
+    tf.keras.layers.Dense(config.n_classes)])
 model.compile(optimizer='adam',
               loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
               metrics=['accuracy'])

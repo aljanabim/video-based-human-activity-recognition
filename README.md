@@ -11,6 +11,8 @@ The important parts of the code are organized as follows.
 
 ```
 main.py                          # main script (maybe parse arguments here too)
+config.py                        # file with all the parameters used across all modules
+
 Requirements.py                  # file with the dependencies
 
 data_utils
@@ -27,7 +29,10 @@ training
 └── train.py                     # called to start training
 
 data 
-└── 20bn-something-something-v2  # the full dataset
+├──  20bn-something-something-v2-video  # the full dataset
+├── 20bn-something-something-v2-jason   # jason labels comming with the dataset
+├── 20bn-something-something-v2-frame   # extraced frames
+└── 20bn-something-something-v2-label   # labels for train, test and valid set   
 
 models
 └── Xpection.py                  # Xcpection based model

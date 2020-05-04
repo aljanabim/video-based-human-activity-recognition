@@ -3,6 +3,8 @@
 
 import sys
 sys.path.append('../')
+sys.path.append('.')
+
 from config import Config
 
 import os
@@ -63,8 +65,8 @@ def build_file_list(config):
         assert i == int(idx)  # make sure the rank is right
         categories.append(cat)
 
-    with open('category.txt', 'w') as f:
-        f.write('\n'.join(categories))
+    # with open('category.txt', 'w') as f:
+    #     f.write('\n'.join(categories))
 
     dict_categories = {}
     for i, category in enumerate(categories):

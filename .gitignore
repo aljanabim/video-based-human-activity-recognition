@@ -3,3 +3,4 @@
 *.jpg
 /__pycache__/
 logs
+data/records
