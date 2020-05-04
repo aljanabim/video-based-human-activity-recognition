@@ -1,17 +1,14 @@
 """Module for loading metadata.
-
-Example:
-    label_loader = LabelLoader()
-    labels = label_loader.load_labels()
-    label_dict = label_loader.get_label_dict()
-
+    metadata_loader = MetadataLoader()
+    metadata = metadata_loader.load_metadata()
+    label_dict = metadata_loader.get_label_dict()
 """
 
 import json
 
 
 class MetadataLoader:
-    """Used to load videos as numpy arrays."""
+    """Used to load video metadata."""
 
     def __init__(self, label_folder_path='../data/something-something-mini-anno'):
         """Constructor."""
