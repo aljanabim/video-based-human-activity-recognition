@@ -33,6 +33,9 @@ Example:
         print("shape:", frame.shape, "label:", label.numpy())
 
 """
+import sys
+sys.path.append('../')
+from config import Config
 
 from data_utils.metadata_loader import MetadataLoader
 import tensorflow as tf
@@ -42,12 +45,12 @@ import os
 class DatasetBuilder:
     """Used to build datasets."""
 
-    def __init__(self, max_frames, n_classes, img_width, img_height, frame_path):
-        self.max_frames = max_frames
-        self.n_classes = n_classes
-        self.img_width = img_width
-        self.img_height = img_height
-        self.frame_path = frame_path
+    def __init__(self, config):
+        self.max_frames = config.max_frames
+        self.n_classes = config.n_classes
+        self.img_width = config.img_width
+        self.img_height = config.img_height
+        self.frame_path = config.frame_path
         self.autotune = tf.data.experimental.AUTOTUNE
 
     def _build_process_path_function(self, action_label_table, img_width, img_height, n_classes):
@@ -179,25 +182,20 @@ class DatasetBuilder:
 
 
 if __name__ == '__main__':
-    # define paths
-    root_path = "./data/something-something-mini"
-    anno_path = "{}-anno".format(root_path)
-    frame_path = "{}-frame".format(root_path)
+    # load config
+    config = Config()
 
+    
     # get metadata
-    metadata_loader = MetadataLoader(label_folder_path=anno_path)
+    metadata_loader = MetadataLoader(config)
     metadata = metadata_loader.load_metadata()
 
     # get ids for videos in frame folder
-    video_ids = os.listdir(frame_path)
+    video_ids = os.listdir(config.frame_path)
     train_video_ids = [id for id in video_ids if int(id) in metadata['train']]
     video_id_list = train_video_ids
 
-    builder = DatasetBuilder(max_frames=70,
-                             n_classes=174,
-                             img_width=455,
-                             img_height=256,
-                             frame_path=frame_path)
+    builder = DatasetBuilder(config)
 
     video_dataset = builder.make_video_dataset(video_id_list, metadata['train'])
     frame_dataset = builder.make_frame_dataset(video_id_list, metadata['train'])

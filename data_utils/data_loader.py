@@ -39,9 +39,9 @@ def load_data(config):
 
     """
 
-    video_loader = VideoLoader(img_width=455, img_height=256, video_folder_path=config.frame_path)
+    video_loader = VideoLoader(config)
     videos = video_loader.load_all_videos()
-    metadata_loader = MetadataLoader(label_folder_path=config.anno_path)
+    metadata_loader = MetadataLoader(config)
     metadata = metadata_loader.load_metadata()
     label_dict = metadata_loader.get_label_dict()
 

@@ -5,6 +5,9 @@ Example:
     videos = loader.load_all_videos()
 
 """
+import sys
+sys.path.append('../')
+from config import Config
 
 import tensorflow as tf
 import os
@@ -13,12 +16,11 @@ import os
 class VideoLoader:
     """Used to load videos as numpy arrays."""
 
-    def __init__(self, img_width=455, img_height=256,
-                 video_folder_path='../data/something-something-mini-frame'):
+    def __init__(self, config):
         """Constructor."""
-        self.video_folder_path = video_folder_path
-        self.img_width = img_width
-        self.img_height = img_height
+        self.video_folder_path = config.frame_path
+        self.img_width = config.img_width
+        self.img_height = config.img_height
 
     def load_all_videos(self, video_folder_path=None):
         """Load all videos in selected directory.
@@ -73,7 +75,8 @@ class VideoLoader:
 
 
 if __name__ == "__main__":
-    loader = VideoLoader()
+    config = Config()
+    loader = VideoLoader(config)
     videos = loader.load_all_videos()
     vid = videos[2]
     print("--- Video Loader ---")

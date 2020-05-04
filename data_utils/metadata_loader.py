@@ -3,6 +3,9 @@
     metadata = metadata_loader.load_metadata()
     label_dict = metadata_loader.get_label_dict()
 """
+import sys
+sys.path.append('../')
+from config import Config
 
 import json
 
@@ -10,14 +13,12 @@ import json
 class MetadataLoader:
     """Used to load video metadata."""
 
-    def __init__(self, label_folder_path='../data/something-something-mini-anno'):
+    def __init__(self, config):
         """Constructor."""
-        self.label_folder_path = label_folder_path
-
-        self.labels_file_path = "{}/something-something-v2-labels.json".format(self.label_folder_path)
-        self.train_file_path = "{}/train_videofolder.txt".format(self.label_folder_path)
-        self.valid_file_path = "{}/val_videofolder.txt".format(self.label_folder_path)
-        self.test_file_path = "{}/test_videofolder.txt".format(self.label_folder_path)
+        self.labels_file_path = "{}/something-something-v2-labels.json".format(config.jason_label_path)
+        self.train_file_path = "{}/train_videofolder.txt".format(config.label_path)
+        self.valid_file_path = "{}/val_videofolder.txt".format(config.label_path)
+        self.test_file_path = "{}/test_videofolder.txt".format(config.label_path)
 
     def load_metadata(self):
         """Load labels.
@@ -58,6 +59,8 @@ class MetadataLoader:
 
 
 if __name__ == "__main__":
-    metadata_loader = MetadataLoader()
+
+    config = Config()
+    metadata_loader = MetadataLoader(config)
     metadata = metadata_loader.load_metadata()
     label_dict = metadata_loader.get_label_dict()
