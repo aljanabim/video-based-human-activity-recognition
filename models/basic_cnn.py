@@ -1,7 +1,16 @@
+"""Simple script preparing dat anad training a basic CNN.
+
+IMPORTANT: Before running this, make sure the folder ./data/1000-videos/video exists and contains
+           videos in .webm format. Also make sure that the foler
+           ./data/20bn-something-something-v2-jason exists and contains four .json files.
+
+"""
+
+
 import sys
 sys.path.append('../')
 sys.path.append('.')
-print(sys.path)
+
 #from config import Config
 
 from config import Config
@@ -14,11 +23,13 @@ import matplotlib.pyplot as plt
 
 plt.style.use('ggplot')
 
-# hyperparams
-config = Config()
+# Config
+config = Config(root_path='./data/1000-videos', img_width=84, img_height=84, use_subfolders=True)
 
 # Decode videos
+print("Start decode.")
 video_to_frames.decode_videos(config)
+print("Decode done.")
 
 # Get metadata
 ml = metadata_loader.MetadataLoader(config)
@@ -35,8 +46,10 @@ db = dataset_builder.DatasetBuilder(config)
 
 # Build datasets
 train_dataset = db.make_frame_dataset(train_video_ids, metadata['train'])
-valid_dataset = db.make_frame_dataset(valid_video_ids, metadata['valid'])
-test_dataset = db.make_frame_dataset(test_video_ids, metadata['test'])
+# valid_dataset = db.make_frame_dataset(valid_video_ids, metadata['valid'])
+# test_dataset = db.make_frame_dataset(test_video_ids, metadata['test'])
+
+print("iterate")
 
 # Build model
 model = tf.keras.models.Sequential([
@@ -52,5 +65,5 @@ model.summary()
 
 # Train model
 train_dataset = train_dataset.shuffle(buffer_size=100)
-train_dataset = train_dataset.batch(20)
+train_dataset = train_dataset.batch(100)
 model.fit(train_dataset, epochs=2)
