@@ -22,11 +22,6 @@ video_to_frames.decode_videos(config)
 ml = metadata_loader.MetadataLoader(config)
 metadata = ml.load_metadata()
 
-# Get video id sets
-video_ids = os.listdir(config.frame_path)
-train_video_ids = [id for id in video_ids if int(id) in metadata['train']]
-valid_video_ids = [id for id in video_ids if int(id) in metadata['valid']]
-test_video_ids = [id for id in video_ids if int(id) in metadata['test']]
 
 # Setup dataset builder
 db = dataset_builder.DatasetBuilder(config)
