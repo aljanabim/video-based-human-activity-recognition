@@ -64,7 +64,12 @@ class DatasetBuilder:
 
         def _get_label(file_path):
             # convert the path to a list of path components
-            parts = tf.strings.split(file_path, sep="/")
+
+            # special case for windows file systems
+            if os.name == 'nt':  # nt == windows
+                parts = tf.strings.split(file_path, sep="\\")
+            else:
+                parts = tf.strings.split(file_path, sep="/")
             # The second to last is the class-directory
             return action_label_table.lookup(parts[-2])
 
@@ -187,7 +192,7 @@ if __name__ == '__main__':
     # load config
     config = Config()
 
-    
+
     # get metadata
     metadata_loader = MetadataLoader(config)
     metadata = metadata_loader.load_metadata()
