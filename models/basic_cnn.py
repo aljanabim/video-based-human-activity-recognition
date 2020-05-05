@@ -23,10 +23,10 @@ plt.style.use('ggplot')
 # Config
 config = Config(root_path='./data/1000-videos', img_width=84, img_height=84, use_subfolders=True)
 
-# Decode videos
-print("Start decode.")
-video_to_frames.decode_videos(config)
-print("Decode done.")
+# # Decode videos
+# print("Start decode.")
+# video_to_frames.decode_videos(config)
+# print("Decode done.")
 
 # Get metadata
 ml = metadata_loader.MetadataLoader(config)
@@ -51,6 +51,12 @@ model.compile(optimizer='adam',
 model.summary()
 
 # Train model
+print("==== Train ====")
 train_dataset = train_dataset.shuffle(buffer_size=100)
 train_dataset = train_dataset.batch(100)
-model.fit(train_dataset, epochs=2)
+model.fit(train_dataset, epochs=1)
+
+# Evaluate models
+print("==== Evaluate ====")
+valid_dataset = valid_dataset.batch(100)
+model.evaluate(valid_dataset)
