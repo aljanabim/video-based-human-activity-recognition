@@ -29,6 +29,7 @@ def decode_video(config):
         os.makedirs(config.label_path)
 
     video_list = os.listdir(config.videos_path)
+    # print(video_list)
     splits = list(split_func(video_list, config.n_threads))
 
     ## sub_functions for extraction
@@ -54,6 +55,8 @@ def decode_video(config):
         thread.join()
 
 def build_file_list(config):
+    n_deleted_folders = 0
+
     if not os.path.exists(config.jason_label_path):
         raise ValueError('Please download annotations and set label_path variable.')
 
@@ -96,24 +99,30 @@ def build_file_list(config):
                 curFolder = folders[i]
                 curIDX = idx_categories[i]
                 # counting the number of frames in each video folders
-                dir_files = os.listdir(os.path.join(config.frame_path , curFolder))
+                dir_files = os.listdir(os.path.join(config.frame_path, curFolder))
                 if len(dir_files) == 0:
-                    print('video decoding fails at %s' % (curFolder))
-                    sys.exit()
-                output.append('%s %d %d' % (curFolder, len(dir_files), curIDX))
-                print('%d/%d' % (i, len(folders)))
+                    print('WARNING: Error when building file list, frame folder empty at %s, deleting folder' % (curFolder))
+                    os.rmdir(os.path.join(config.frame_path, curFolder))
+                    n_deleted_folders += 1
+                    # sys.exit()
+                else:
+                    output.append('%s %d %d' % (curFolder, len(dir_files), curIDX))
+                    print('%d/%d' % (i, len(folders)))
             except FileNotFoundError:
                 pass
         with open(filename_output, 'w') as f:
             f.write('\n'.join(output))
 
+    print("Deleted folders: {}".format(n_deleted_folders))
+
 def decode_videos(config):
     """Decode videos stored in video format to folders containing jpgs.
     """
-    
+
     if config.decode_video:
         print('Decoding videos to frames.')
         decode_video(config)
+
 
     if config.build_file_list:
         print('Generating training files.')
