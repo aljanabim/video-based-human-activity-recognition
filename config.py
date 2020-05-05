@@ -34,3 +34,9 @@ class Config():
 
         # tf records
         self.record_output = RECORDS_PATH
+
+
+        ## c3d
+        self.optimizer = 'rmsprop'
+        # self.loss = 
+        self.metrics = ['accuracy']
