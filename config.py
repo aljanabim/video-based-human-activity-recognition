@@ -5,32 +5,29 @@ ROOT_PATH = "./data/something-something-mini"
 JSON_PATH = './data/20bn-something-something-v2-jason'
 RECORDS_PATH = './data/records/'
 class Config():
-    def __init__(self):
-        self.root_path = os.path.expanduser(ROOT_PATH)
-        
+    def __init__(self, root_path=ROOT_PATH, json_path=JSON_PATH, n_classes=174,
+                 img_width=455, img_height=256, max_frames=70, n_frames=40):
+        self.root_path = os.path.expanduser(root_path)
+
         # videos to be used
-        self.videos_path = os.path.expanduser("{}-video".format(ROOT_PATH))
+        self.videos_path = os.path.expanduser("{}-video".format(root_path))
         # annonations of the used videos
-        self.jason_label_path = JSON_PATH
+        self.jason_label_path = json_path
 
         ## output folders
-        self.label_path =   os.path.expanduser("{}-label".format(ROOT_PATH))
-        self.frame_path =  os.path.expanduser("{}-frame".format(ROOT_PATH))
-        
-                
+        self.label_path =   os.path.expanduser("{}-label".format(root_path))
+        self.frame_path =  os.path.expanduser("{}-frame".format(root_path))
 
-        self.n_classes=174
-        self.img_width=455
-        self.img_height=256
-        self.max_frames=70
-
+        self.n_classes = n_classes
+        self.img_width = img_width
+        self.img_height = img_height
+        self.max_frames = max_frames
 
         #video to frames
-        self.n_frames = 40
-        self.n_threads=100
+        self.n_frames = n_frames
+        self.n_threads = 100
         self.decode_video = True
         self.build_file_list = True
-
 
         # tf records
         self.record_output = RECORDS_PATH
