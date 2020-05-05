@@ -125,9 +125,10 @@ class DatasetBuilder:
 
         return _pad_fn
 
-    def make_video_dataset(self, video_id_list, metadata):
+    def make_video_dataset(self, metadata):
         """Take list of frame folder paths and return dataset with videos."""
 
+        video_id_list = [id for id in os.listdir(self.frame_path) if int(id) in metadata]
         # creates a dataset containing frame folder paths
         frame_folder_paths = [self.frame_path + "/" + id for id in video_id_list]
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
@@ -155,14 +156,16 @@ class DatasetBuilder:
 
         return padded_videos_dataset
 
-    def make_frame_dataset(self, video_id_list, metadata):
+    def make_frame_dataset(self,metadata):
         """Take list of frame folder paths and return dataset with frames."""
+        video_id_list = [id for id in os.listdir(self.frame_path) if int(id) in metadata]
         frame_folder_paths = [self.frame_path + "/" + id for id in video_id_list]
 
         # creates a dataset containing frame folder paths
         frame_path_subdatasets = [self._dataset_from_folder(path) for path in frame_folder_paths]
 
         if len(frame_path_subdatasets)==0: return
+
         frame_path_dataset = frame_path_subdatasets.pop()
         while frame_path_subdatasets:
             frame_path_dataset = frame_path_dataset.concatenate(frame_path_subdatasets.pop())
@@ -178,7 +181,7 @@ class DatasetBuilder:
         process_path_function = self._build_process_path_function(
             action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
 
-        frame_dataset = frame_path_dataset.map(process_path_function)
+        frame_dataset = frame_path_dataset.map(process_path_function, num_parallel_calls=self.autotune)
 
         return frame_dataset
 
@@ -199,8 +202,8 @@ if __name__ == '__main__':
 
     builder = DatasetBuilder(config)
 
-    video_dataset = builder.make_video_dataset(video_id_list, metadata['train'])
-    frame_dataset = builder.make_frame_dataset(video_id_list, metadata['train'])
+    video_dataset = builder.make_video_dataset(metadata['train'])
+    frame_dataset = builder.make_frame_dataset(metadata['train'])
 
     print("=== VIDEOS ===")
     for video, label in video_dataset:

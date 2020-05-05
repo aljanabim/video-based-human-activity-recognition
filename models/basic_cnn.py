@@ -1,8 +1,6 @@
 import sys
 sys.path.append('../')
 sys.path.append('.')
-print(sys.path)
-#from config import Config
 
 from config import Config
 from data_utils import video_to_frames
@@ -34,9 +32,9 @@ test_video_ids = [id for id in video_ids if int(id) in metadata['test']]
 db = dataset_builder.DatasetBuilder(config)
 
 # Build datasets
-train_dataset = db.make_frame_dataset(train_video_ids, metadata['train'])
-valid_dataset = db.make_frame_dataset(valid_video_ids, metadata['valid'])
-test_dataset = db.make_frame_dataset(test_video_ids, metadata['test'])
+train_dataset = db.make_frame_dataset(metadata['train'])
+valid_dataset = db.make_frame_dataset(metadata['valid'])
+test_dataset = db.make_frame_dataset(metadata['test'])
 
 # Build model
 model = tf.keras.models.Sequential([

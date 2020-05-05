@@ -1,12 +1,12 @@
 import os
 
-# ROOT_PATH = "./data/20bn-something-something-v2"  #FULL DATASET
-ROOT_PATH = "./data/something-something-mini"
+ROOT_PATH = "./data/20bn-something-something-v2"  #FULL DATASET
+#ROOT_PATH = "./data/something-something-mini"
 JSON_PATH = './data/20bn-something-something-v2-jason'
 RECORDS_PATH = './data/records/'
 class Config():
     def __init__(self, root_path=ROOT_PATH, json_path=JSON_PATH, n_classes=174,
-                 img_width=455, img_height=256, max_frames=70, n_frames=40, use_subfolders=False):
+                 img_width=200, img_height=120, max_frames=85, n_frames=40, use_subfolders=False):
 
         separator = '/' if use_subfolders else '-'
 

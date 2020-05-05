@@ -20,7 +20,6 @@ def split_func(l, n):
         yield l[i:i + n]
 
 def decode_video(config):
-    print(config.videos_path)
     if not os.path.exists(config.videos_path):
         raise ValueError('Please download videos and set video_root variable.')
     if not os.path.exists(config.frame_path):
@@ -75,10 +74,15 @@ def build_file_list(config):
     files_input = [os.path.join(config.jason_label_path, '%s-validation.json' % dataset_name),
                    os.path.join(config.jason_label_path, '%s-train.json' % dataset_name),
                    os.path.join(config.jason_label_path, '%s-test.json' % dataset_name)]
+
     files_output = [os.path.join(config.label_path, 'val_videofolder.txt'),
                     os.path.join(config.label_path, 'train_videofolder.txt'),
                     os.path.join(config.label_path, 'test_videofolder.txt')]
+
+    
+
     for (filename_input, filename_output) in zip(files_input, files_output):
+        if os.path.exists(filename_output): continue
         with open(filename_input) as f:
             data = json.load(f)
         folders = []
@@ -114,10 +118,14 @@ def decode_videos(config):
     if config.decode_video:
         print('Decoding videos to frames.')
         decode_video(config)
+        print(config.videos_path)
+
 
     if config.build_file_list:
         print('Generating training files.')
         build_file_list(config)
+        print(config.label_path)
+
 
 
 if __name__ == '__main__':
