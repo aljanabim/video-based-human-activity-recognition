@@ -6,11 +6,9 @@ IMPORTANT: Before running this, make sure the folder ./data/1000-videos/video ex
 
 """
 
-
 import sys
 sys.path.append('../')
 sys.path.append('.')
-
 
 from config import Config
 from data_utils import video_to_frames
@@ -25,24 +23,20 @@ plt.style.use('ggplot')
 # Config
 config = Config(root_path='./data/1000-videos', img_width=84, img_height=84, use_subfolders=True)
 
-# # Decode videos
-# print("Start decode.")
-# video_to_frames.decode_videos(config)
-# print("Decode done.")
+# Decode videos
+print("Start decode.")
+video_to_frames.decode_videos(config)
+print("Decode done.")
 
 # Get metadata
 ml = metadata_loader.MetadataLoader(config)
 metadata = ml.load_metadata()
 
-# Setup dataset builder
-db = dataset_builder.DatasetBuilder(config)
-
 # Build datasets
+db = dataset_builder.DatasetBuilder(config)
 train_dataset = db.make_frame_dataset(metadata['train'])
 valid_dataset = db.make_frame_dataset(metadata['valid'])
 test_dataset = db.make_frame_dataset(metadata['test'])
-
-print("iterate")
 
 # Build model
 model = tf.keras.models.Sequential([
