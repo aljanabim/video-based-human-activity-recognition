@@ -25,23 +25,22 @@ plt.style.use('ggplot')
 # Config
 config = Config(root_path='./data/1000-videos', img_width=84, img_height=84, use_subfolders=True)
 
-# Decode videos
-print("Start decode.")
-video_to_frames.decode_videos(config)
-print("Decode done.")
+# # Decode videos
+# print("Start decode.")
+# video_to_frames.decode_videos(config)
+# print("Decode done.")
 
 # Get metadata
 ml = metadata_loader.MetadataLoader(config)
 metadata = ml.load_metadata()
 
-
 # Setup dataset builder
 db = dataset_builder.DatasetBuilder(config)
 
 # Build datasets
-train_dataset = db.make_frame_dataset(train_video_ids, metadata['train'])
-# valid_dataset = db.make_frame_dataset(valid_video_ids, metadata['valid'])
-# test_dataset = db.make_frame_dataset(test_video_ids, metadata['test'])
+train_dataset = db.make_frame_dataset(metadata['train'])
+valid_dataset = db.make_frame_dataset(metadata['valid'])
+test_dataset = db.make_frame_dataset(metadata['test'])
 
 print("iterate")
 
