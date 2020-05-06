@@ -1,6 +1,7 @@
 *.webm
 *.pyc
 *.jpg
+*.avi
 /__pycache__/
 logs
 data/records
