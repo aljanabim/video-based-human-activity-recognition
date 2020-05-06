@@ -17,10 +17,14 @@ class MetadataLoader:
 
     def __init__(self, config):
         """Constructor."""
-        self.labels_file_path = "{}/something-something-v2-labels.json".format(config.jason_label_path)
-        self.train_file_path = "{}/train_videofolder.txt".format(config.label_path)
-        self.valid_file_path = "{}/val_videofolder.txt".format(config.label_path)
-        self.test_file_path = "{}/test_videofolder.txt".format(config.label_path)
+        self.labels_file_path = "{}/something-something-v2-labels.json".format(
+            config.jason_label_path)
+        self.train_file_path = "{}/train_videofolder.txt".format(
+            config.label_path)
+        self.valid_file_path = "{}/val_videofolder.txt".format(
+            config.label_path)
+        self.test_file_path = "{}/test_videofolder.txt".format(
+            config.label_path)
 
     def load_metadata(self):
         """Load labels.
@@ -32,7 +36,8 @@ class MetadataLoader:
 
         """
         set_names = ["train", "valid", "test"]
-        paths = [self.train_file_path, self.valid_file_path, self.test_file_path]
+        paths = [self.train_file_path,
+                 self.valid_file_path, self.test_file_path]
 
         metadata = {}
         for set_name, path in zip(set_names, paths):
@@ -56,7 +61,8 @@ class MetadataLoader:
             label_file = f.read()
 
         inverse_label_dict = json.loads(label_file)
-        label_dict = {int(value): key for key, value in inverse_label_dict.items()}
+        label_dict = {int(value): key for key,
+                      value in inverse_label_dict.items()}
         return label_dict
 
 

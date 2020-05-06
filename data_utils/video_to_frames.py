@@ -26,7 +26,6 @@ def decode_video(config):
         os.makedirs(config.label_path)
 
     video_list = os.listdir(config.videos_path)
-    # print(video_list)
     splits = list(split_func(video_list, config.n_threads))
 
     # sub_functions for extraction
@@ -55,6 +54,20 @@ def decode_video(config):
 
 
 def build_file_list(config):
+    '''
+    Writes the meta data that correspond to each expored video file:
+    - train_videofolder.txt
+    - valid_videofolder.txt
+    - test_videofolder.txt
+
+    each line in those files correspond to
+    "frames_folder #frames lable_id"
+    eg
+    "443 42 157"
+    Is a folder of frames containing the validation video with the name 443.
+    It has 42 frames and has the label with the id 157 which corresponds to
+    "Sprinkling something onto something"
+    '''
     n_deleted_folders = 0
 
     if not os.path.exists(config.jason_label_path):
@@ -68,7 +81,6 @@ def build_file_list(config):
     for i, (cat, idx) in enumerate(data.items()):
         assert i == int(idx)  # make sure the rank is right
         categories.append(cat)
-
     # with open('category.txt', 'w') as f:
     #     f.write('\n'.join(categories))
 

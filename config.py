@@ -1,8 +1,8 @@
 import os
 
-# ROOT_PATH = "./data/20bn-something-something-v2"  #FULL DATASET
-ROOT_PATH = "data/20bn-something-something-v2-mini"
-ROOT_PATH = "data/1000-videos"
+ROOT_PATH = "./data/20bn-something-something-v2"  #FULL DATASET
+#ROOT_PATH = "data/20bn-something-something-v2-mini"
+#ROOT_PATH = "data/1000-videos"
 JSON_PATH = './data/20bn-something-something-v2-jason'
 RECORDS_PATH = './data/records/'
 
