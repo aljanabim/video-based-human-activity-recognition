@@ -8,7 +8,6 @@ sys.path.append('.')
 from config import Config
 
 import os
-import sys
 import threading
 import argparse
 import json
