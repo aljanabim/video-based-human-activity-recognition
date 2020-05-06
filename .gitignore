@@ -5,4 +5,9 @@
 /__pycache__/
 logs
 data/records
-docs/
+docs/*
+1000-videos/
+*.txt
+data/1000-videos/
+data/1000-videos/label/test_videofolder.txt
+data/1000-videos/label/train_videofolder.txt
