@@ -35,9 +35,9 @@ metadata = ml.load_metadata()
 
 # Build datasets
 db = dataset_builder.DatasetBuilder(config)
-train_dataset = db.make_frame_dataset(metadata['train'])
-valid_dataset = db.make_frame_dataset(metadata['valid'])
-test_dataset = db.make_frame_dataset(metadata['test'])
+train_dataset = db.make_frame_dataset(metadata['train']).shuffle(buffer_size=100).batch(100).prefetch(2)
+valid_dataset = db.make_frame_dataset(metadata['valid']).shuffle(buffer_size=100).batch(100)
+test_dataset = db.make_frame_dataset(metadata['test']).shuffle(buffer_size=100).batch(100)
 
 # Build model
 model = tf.keras.models.Sequential([
@@ -47,17 +47,14 @@ model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(512, activation='relu'),
     tf.keras.layers.Dense(config.n_classes)])
 model.compile(optimizer='adam',
-              loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+              loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 model.summary()
 
 # Train model
 print("==== Train ====")
-train_dataset = train_dataset.shuffle(buffer_size=100)
-train_dataset = train_dataset.batch(100)
-model.fit(train_dataset, epochs=1)
+model.fit(train_dataset, epochs=1, validation_data=None)
 
-# Evaluate models
-print("==== Evaluate ====")
-valid_dataset = valid_dataset.batch(100)
-model.evaluate(valid_dataset)
+# # Evaluate models
+# print("==== Evaluate ====")
+# model.evaluate(valid_dataset)

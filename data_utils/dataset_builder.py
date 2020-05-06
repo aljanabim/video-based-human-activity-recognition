@@ -80,6 +80,15 @@ class DatasetBuilder:
 
         def _process_path(file_path):
             # ------------------------------------------------
+            # parts = tf.strings.split(file_path, sep="\\")
+            # label = action_label_table.lookup(parts[-2])
+            # tf.print(label)
+            # label_tensor = tf.one_hot(label, n_classes, dtype=tf.int32)
+            # img = tf.io.read_file(file_path)
+            # img = tf.image.decode_jpeg(img, channels=3)
+            # img = tf.image.convert_image_dtype(img, tf.float32)
+            # frame = tf.image.resize(img, [img_width, img_height])
+
             label = _get_label(file_path)
             label_tensor = _make_one_hot_encoding(label)
             img = tf.io.read_file(file_path)  # from einar's script
@@ -161,7 +170,7 @@ class DatasetBuilder:
 
         return padded_videos_dataset
 
-    def make_frame_dataset(self,metadata):
+    def make_frame_dataset(self, metadata):
         """Take list of frame folder paths and return dataset with frames."""
         video_id_list = [id for id in os.listdir(self.frame_path) if int(id) in metadata]
         frame_folder_paths = [self.frame_path + "/" + id for id in video_id_list]
@@ -194,7 +203,6 @@ class DatasetBuilder:
 if __name__ == '__main__':
     # load config
     config = Config()
-
 
     # get metadata
     metadata_loader = MetadataLoader(config)
