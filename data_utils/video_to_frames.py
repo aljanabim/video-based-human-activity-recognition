@@ -11,15 +11,6 @@ sys.path.append('../')
 sys.path.append('.')
 from config import Config
 
-<<<<<<< HEAD
-import os
-import threading
-import argparse
-import json
-
-=======
->>>>>>> 5db6b60f8724db3bbd4b1061ed48287f9951d6cd
-
 def split_func(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
@@ -151,5 +142,5 @@ def decode_videos(config):
 
 
 if __name__ == '__main__':
-    config = Config(use_subfolders=True)
+    config = Config(use_subfolders=False)
     decode_videos(config)
