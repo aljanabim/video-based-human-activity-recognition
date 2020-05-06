@@ -6,22 +6,23 @@ IMPORTANT: Before running this, make sure the folder ./data/1000-videos/video ex
 
 """
 
+import matplotlib.pyplot as plt
+import tensorflow as tf
+import os
 import sys
 sys.path.append('../')
 sys.path.append('.')
-
-from config import Config
-from data_utils import video_to_frames
-from data_utils import metadata_loader
 from data_utils import dataset_builder
-import os
-import tensorflow as tf
-import matplotlib.pyplot as plt
+from data_utils import metadata_loader
+from data_utils import video_to_frames
+from config import Config
+
 
 plt.style.use('ggplot')
 
 # Config
-config = Config(root_path='./data/1000-videos', img_width=84, img_height=84, use_subfolders=True)
+config = Config(root_path='./data/1000-videos', img_width=84,
+                img_height=84, use_subfolders=True)
 
 # # Decode videos
 # print("Start decode.")
