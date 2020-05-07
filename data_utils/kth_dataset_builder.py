@@ -45,7 +45,7 @@ import tensorflow as tf
 class DatasetBuilder:
     """Converts videos to jpg and builds datasets."""
 
-    def __init__(self, video_path, frame_path, img_width, img_height,
+    def __init__(self, video_path, frame_path, img_width=84, img_height=84,
                  ms_per_frame=1000, max_frames=25):
         """Init DatasetBuilder.
 
@@ -195,9 +195,9 @@ class DatasetBuilder:
 
         # build padding function and apply
         pad_function = self._build_pad_function(self.max_frames)
-        padded_videos_dataset = video_dataset.map(pad_function)
+        padded_videos_dataset = video_dataset.map(pad_function, num_parallel_calls=self.autotune)
 
-        return padded_videos_dataset
+        return padded_videos_dataset.shuffle(10000)
 
     def make_frame_dataset(self, metadata):
         """Take metadata dict and return dataset with frames."""
@@ -219,12 +219,14 @@ class DatasetBuilder:
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(self.label_names, self.label_ints), -1)
 
+        print(action_label_table.export())
+
         # build function to process images into tensors with labels and apply map
         process_path_function = self._build_process_path_function(
             action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
         frame_dataset = frame_path_dataset.map(process_path_function, num_parallel_calls=self.autotune)
 
-        return frame_dataset
+        return frame_dataset.shuffle(10000000)
 
     def convert_videos_to_frames(self):
         """Convert videos on disk to jpg frames and store on disk.
@@ -321,11 +323,16 @@ if __name__ == "__main__":
     metadata = builder.generate_metadata()
 
     # Build datasets
-    video_dataset = builder.make_video_dataset(metadata=metadata['train'])
-    frame_dataset = builder.make_frame_dataset(metadata=metadata['valid'])
+    video_dataset_train = builder.make_video_dataset(metadata=metadata['train'])
+    video_dataset_valid = builder.make_video_dataset(metadata=metadata['valid'])
+    video_dataset_test = builder.make_video_dataset(metadata=metadata['test'])
+
+    frame_dataset_train = builder.make_frame_dataset(metadata=metadata['train'])
+    frame_dataset_valid = builder.make_frame_dataset(metadata=metadata['valid'])
+    frame_dataset_test = builder.make_frame_dataset(metadata=metadata['test'])
 
     # Verify that the datasets work
-    for vid in video_dataset:
+    for vid in video_dataset_train:
         pass
-    for frame in frame_dataset:
+    for frame in frame_dataset_train:
         pass
