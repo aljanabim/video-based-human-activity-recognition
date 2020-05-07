@@ -208,7 +208,22 @@ class DatasetBuilder:
 
     def generate_metadata(self):
         # TODO: Implement
-        pass
+
+        valid_frac = 0.15
+        test_frac = 0.15
+        metadata = {}
+        for label_name in self.label_names:
+            video_names = os.listdir(self.frame_path + '/' + label_name)
+            n_videos = len(video_names)
+            valid_start = -int(n_videos*(valid_frac + test_frac))
+            test_start = -int(n_videos*(test_frac))
+            train_videos = video_names[:valid_start]
+            valid_videos = video_names[valid_start:test_start]
+            test_videos = video_names[test_start:]
+            metadata['train'] = {id: label_name for id in train_videos}
+            metadata['valid'] = {id: label_name for id in valid_videos}
+            metadata['test'] = {id: label_name for id in test_videos}
+        return metadata
 
 
 videos_path = './data/kth-actions/videos'
