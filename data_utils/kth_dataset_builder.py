@@ -1,10 +1,84 @@
+""" Module for processing KTH Actions dataset.
+
+Instructions:
+
+1. Download dataset from https://www.csc.kth.se/cvap/actions/
+2. Create following folder structure in project directory:
+    .
+    └── data
+        └── kth-actions
+            ├── frame
+            |   ├── boxing
+            |   ├── handclapping
+            |   ├── handwaving
+            |   ├── jogging
+            |   ├── running
+            |   └── walking
+            └── video
+                ├── boxing
+                ├── handclapping
+                ├── handwaving
+                ├── jogging
+                ├── running
+                └── walking
+
+3. Extract each class into corresponding video folder.
+4. Run following script:
+
+    video_path = './data/kth-actions/video'
+    frame_path = './data/kth-actions/frame'
+
+    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=1000)
+    builder.convert_videos_to_frames()
+    metadata = builder.generate_metadata()
+
+    video_dataset_train = builder.make_video_dataset(metadata=metadata['train'])
+    video_dataset_valid = builder.make_video_dataset(metadata=metadata['valid'])
+    video_dataset_test = builder.make_video_dataset(metadata=metadata['test'])
+
+    frame_dataset_train = builder.make_frame_dataset(metadata=metadata['train'])
+    frame_dataset_valid = builder.make_frame_dataset(metadata=metadata['valid'])
+    frame_dataset_test = builder.make_frame_dataset(metadata=metadata['test'])
+
+5. Train neural networks and make big money
+
+"""
 import cv2
 import os
 import tensorflow as tf
 
-class DatasetBuilder:
 
-    def __init__(self, video_path, frame_path, img_width, img_height, ms_per_frame=1000, max_frames=20):
+class DatasetBuilder:
+    """Converts videos to jpg and builds datasets."""
+
+    def __init__(self, video_path, frame_path, img_width, img_height,
+                 ms_per_frame=1000, max_frames=20):
+        """Init DatasetBuilder.
+
+        The following folder structure should exist:
+
+        .
+        └── data
+            └── dataset_name
+                ├── frame
+                |   ├── boxing
+                |   ├── handclapping
+                |   ├── handwaving
+                |   ├── jogging
+                |   ├── running
+                |   └── walking
+                └── video
+                    ├── boxing
+                    ├── handclapping
+                    ├── handwaving
+                    ├── jogging
+                    ├── running
+                    └── walking
+
+        In this case, video_path = ./data/dataset_name/video
+                      frame_path = ./data/dataset_name/frame
+
+        """
         self.video_path = video_path
         self.frame_path = frame_path
         self.ms_per_frame = ms_per_frame
@@ -105,27 +179,25 @@ class DatasetBuilder:
         return _pad_fn
 
     def make_video_dataset(self, metadata):
-        """Take list of frame folder paths and return dataset with videos."""
-
+        """Take metadata dict and return dataset with videos."""
+        # get relevant folder paths
         frame_folder_paths = []
         for label_name in self.label_names:
             video_names = os.listdir(self.frame_path + '/' + label_name)
+            video_names = [name for name in video_names if name in metadata]  # Filter out set
             paths = ["{}/{}/{}".format(self.frame_path, label_name, video_name) for video_name in video_names]
             frame_folder_paths.extend(paths)
 
+        # create nested dataset
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
-
-        # creates dataset containing datasets of frame paths
         frame_folder_dataset = frame_folder_paths_dataset.map(
             self._dataset_from_folder, num_parallel_calls=self.autotune)
 
-
-        # creates list of labels
-
+        # create label table
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(self.label_names, self.label_ints), -1)
 
-        # build functions to process images and apply map
+        # build functions to process images into stacked tensors with labels and apply map
         process_path_function = self._build_process_path_function(
             action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
         stack_images_from_path_function = self._build_stack_images_from_path_function(
@@ -140,33 +212,57 @@ class DatasetBuilder:
         return padded_videos_dataset
 
     def make_frame_dataset(self, metadata):
-        """Take list of frame folder paths and return dataset with videos."""
-
+        """Take metadata dict and return dataset with frames."""
+        # get relevant folder paths
         frame_folder_paths = []
         for label_name in self.label_names:
             video_names = os.listdir(self.frame_path + '/' + label_name)
+            video_names = [name for name in video_names if name in metadata]  # Filter out set
             paths = ["{}/{}/{}".format(self.frame_path, label_name, video_name) for video_name in video_names]
             frame_folder_paths.extend(paths)
 
+        # concatenate frame paths datasets
         frame_path_subdatasets = [self._dataset_from_folder(path) for path in frame_folder_paths]
-
         frame_path_dataset = frame_path_subdatasets.pop()
         while frame_path_subdatasets:
             frame_path_dataset = frame_path_dataset.concatenate(frame_path_subdatasets.pop())
 
         # creates list of labels
-
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(self.label_names, self.label_ints), -1)
 
+        # build function to process images into tensors with labels and apply map
         process_path_function = self._build_process_path_function(
             action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
-
         frame_dataset = frame_path_dataset.map(process_path_function, num_parallel_calls=self.autotune)
 
         return frame_dataset
 
     def convert_videos_to_frames(self):
+        """Convert videos on disk to jpg frames and store on disk.
+
+        Must have below folder structure:
+
+            dataset_name
+            ├── frame
+            |   ├── boxing
+            |   ├── handclapping
+            |   ├── handwaving
+            |   ├── jogging
+            |   ├── running
+            |   └── walking
+            └── video
+                ├── boxing
+                ├── handclapping
+                ├── handwaving
+                ├── jogging
+                ├── running
+                └── walking
+
+        where the video folders contains the corresponding videos. Any existing frames in the frame
+        folders will be overwritten.
+
+        """
         print("Converting videos... 0% done")
         counter = 0
         classes = os.listdir(self.videos_path)
@@ -207,11 +303,16 @@ class DatasetBuilder:
         return
 
     def generate_metadata(self):
-        # TODO: Implement
+        """Return a nested metadata dict.
 
+        Should be used after convert_videos_to_frames().
+        """
         valid_frac = 0.15
         test_frac = 0.15
         metadata = {}
+        metadata['train'] = {}
+        metadata['valid'] = {}
+        metadata['test'] = {}
         for label_name in self.label_names:
             video_names = os.listdir(self.frame_path + '/' + label_name)
             n_videos = len(video_names)
@@ -220,16 +321,18 @@ class DatasetBuilder:
             train_videos = video_names[:valid_start]
             valid_videos = video_names[valid_start:test_start]
             test_videos = video_names[test_start:]
-            metadata['train'] = {id: label_name for id in train_videos}
-            metadata['valid'] = {id: label_name for id in valid_videos}
-            metadata['test'] = {id: label_name for id in test_videos}
+            metadata['train'].update({id: label_name for id in train_videos})
+            metadata['valid'].update({id: label_name for id in valid_videos})
+            metadata['test'].update({id: label_name for id in test_videos})
         return metadata
 
 
-videos_path = './data/kth-actions/videos'
-frames_path = './data/kth-actions/frame'
-builder = DatasetBuilder(videos_path, frames_path, img_width=84, img_height=84, ms_per_frame=1000)
-# metadata = builder.convert_videos_to_frames()
+if __name__ == "__main__":
+    videos_path = './data/kth-actions/video'
+    frames_path = './data/kth-actions/frame'
+    builder = DatasetBuilder(videos_path, frames_path, img_width=84, img_height=84, ms_per_frame=1000)
+    builder.convert_videos_to_frames()
+    metadata = builder.generate_metadata()
 
-video_dataset = builder.make_video_dataset(metadata=None)
-frame_dataset = builder.make_frame_dataset(metadata=None)
+    video_dataset = builder.make_video_dataset(metadata=metadata['train'])
+    frame_dataset = builder.make_frame_dataset(metadata=metadata['valid'])
