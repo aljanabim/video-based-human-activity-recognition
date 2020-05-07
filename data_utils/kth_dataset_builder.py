@@ -8,12 +8,6 @@ Instructions:
     └── data
         └── kth-actions
             ├── frame
-            |   ├── boxing
-            |   ├── handclapping
-            |   ├── handwaving
-            |   ├── jogging
-            |   ├── running
-            |   └── walking
             └── video
                 ├── boxing
                 ├── handclapping
@@ -52,7 +46,7 @@ class DatasetBuilder:
     """Converts videos to jpg and builds datasets."""
 
     def __init__(self, video_path, frame_path, img_width, img_height,
-                 ms_per_frame=1000, max_frames=20):
+                 ms_per_frame=1000, max_frames=25):
         """Init DatasetBuilder.
 
         The following folder structure should exist:
@@ -61,12 +55,6 @@ class DatasetBuilder:
         └── data
             └── dataset_name
                 ├── frame
-                |   ├── boxing
-                |   ├── handclapping
-                |   ├── handwaving
-                |   ├── jogging
-                |   ├── running
-                |   └── walking
                 └── video
                     ├── boxing
                     ├── handclapping
@@ -245,12 +233,6 @@ class DatasetBuilder:
 
             dataset_name
             ├── frame
-            |   ├── boxing
-            |   ├── handclapping
-            |   ├── handwaving
-            |   ├── jogging
-            |   ├── running
-            |   └── walking
             └── video
                 ├── boxing
                 ├── handclapping
@@ -265,16 +247,17 @@ class DatasetBuilder:
         """
         print("Converting videos... 0% done")
         counter = 0
-        classes = os.listdir(self.videos_path)
+        classes = os.listdir(self.video_path)
         for classname in classes:
-            files = os.listdir("{}/{}".format(self.videos_path, classname))
-            file_paths = ["{}/{}/{}".format(self.videos_path, classname, filename) for filename in files]
+            os.mkdir(self.frame_path + '/' + classname)
+            files = os.listdir("{}/{}".format(self.video_path, classname))
+            file_paths = ["{}/{}/{}".format(self.video_path, classname, filename) for filename in files]
             for path in file_paths:
                 self._video_to_frames(path)
                 counter += 1
                 if counter % 60 == 0:
                     print("Converting videos... {}% done".format(int((counter/self.n_videos)*100)))
-        print("Conversion done, frames stored in {}".format(self.frames_path))
+        print("Conversion done, frames stored in {}".format(self.frame_path))
 
     def _video_to_frames(self, video_path):
         video_path.replace('\\', '/')
@@ -282,7 +265,7 @@ class DatasetBuilder:
         classname = parts[-2]
         videoname = parts[-1].strip('.avi')
 
-        output_dir = "{}/{}/{}".format(frames_path, classname, videoname)
+        output_dir = "{}/{}/{}".format(self.frame_path, classname, videoname)
 
         try:
             os.mkdir(output_dir)
@@ -292,10 +275,10 @@ class DatasetBuilder:
         vidcap = cv2.VideoCapture(video_path)
         success, image = vidcap.read()
         count = 0
-        while success:
+        while success and count < self.max_frames:
             vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * self.ms_per_frame))
             framename = "{}_{}".format(videoname, count)
-            output_path = r"{}/{}/{}/{}.jpg".format(frames_path, classname, videoname, framename)
+            output_path = r"{}/{}.jpg".format(output_dir, framename)
             image = cv2.resize(image, self.img_shape)
             output = cv2.imwrite(output_path, image)
             success, image = vidcap.read()
@@ -328,11 +311,21 @@ class DatasetBuilder:
 
 
 if __name__ == "__main__":
-    videos_path = './data/kth-actions/video'
-    frames_path = './data/kth-actions/frame'
-    builder = DatasetBuilder(videos_path, frames_path, img_width=84, img_height=84, ms_per_frame=1000)
+    # Setup builder
+    video_path = './data/kth-actions/video'
+    frame_path = './data/kth-actions/frame'
+    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=1000)
+
+    # Convert videos and generate metadata
     builder.convert_videos_to_frames()
     metadata = builder.generate_metadata()
 
+    # Build datasets
     video_dataset = builder.make_video_dataset(metadata=metadata['train'])
     frame_dataset = builder.make_frame_dataset(metadata=metadata['valid'])
+
+    # Verify that the datasets work
+    for vid in video_dataset:
+        pass
+    for frame in frame_dataset:
+        pass
