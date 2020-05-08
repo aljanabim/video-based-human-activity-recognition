@@ -40,6 +40,7 @@ Instructions:
 import cv2
 import os
 import tensorflow as tf
+import random
 
 
 class DatasetBuilder:
@@ -106,16 +107,6 @@ class DatasetBuilder:
             return tf.image.resize(frame, [img_width, img_height])
 
         def _process_path(file_path):
-            # ------------------------------------------------
-            # parts = tf.strings.split(file_path, sep="\\")
-            # label = action_label_table.lookup(parts[-2])
-            # tf.print(label)
-            # label_tensor = tf.one_hot(label, n_classes, dtype=tf.int32)
-            # img = tf.io.read_file(file_path)
-            # img = tf.image.decode_jpeg(img, channels=3)
-            # img = tf.image.convert_image_dtype(img, tf.float32)
-            # frame = tf.image.resize(img, [img_width, img_height])
-
             label = _get_label(file_path)
             label_tensor = _make_one_hot_encoding(label)
             img = tf.io.read_file(file_path)  # from einar's script
@@ -149,6 +140,22 @@ class DatasetBuilder:
     def _dataset_from_folder(self, file):
         return tf.data.Dataset.list_files(file+"/*", shuffle=False)
 
+    def _slice_from_folder(self, file):
+        slice = tf.py_function(self._py_slice_from_folder, [file], tf.string)
+        return tf.data.Dataset.list_files(slice)
+
+    def _py_slice_from_folder(self, file):
+        frames = tf.io.gfile.listdir(file.numpy())
+        frames = [file + '/' + frame for frame in frames]
+        n_frames = len(frames)
+        if n_frames <= self.max_frames:
+            slice = frames
+        else:
+            r = random.randint(0, n_frames-self.max_frames)
+            slice = frames[r:r + self.max_frames]
+
+        return tf.convert_to_tensor(slice)
+
     def _build_pad_function(self, max_frames):
 
         def _pad(stacked_im, label):
@@ -179,7 +186,7 @@ class DatasetBuilder:
         # create nested dataset
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
         frame_folder_dataset = frame_folder_paths_dataset.map(
-            self._dataset_from_folder, num_parallel_calls=self.autotune)
+            self._slice_from_folder, num_parallel_calls=self.autotune)
 
         # create label table
         action_label_table = tf.lookup.StaticHashTable(
@@ -218,8 +225,6 @@ class DatasetBuilder:
         # creates list of labels
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(self.label_names, self.label_ints), -1)
-
-        print(action_label_table.export())
 
         # build function to process images into tensors with labels and apply map
         process_path_function = self._build_process_path_function(
@@ -277,12 +282,12 @@ class DatasetBuilder:
         vidcap = cv2.VideoCapture(video_path)
         success, image = vidcap.read()
         count = 0
-        while success and count < self.max_frames:
+        while success:
             vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * self.ms_per_frame))
             framename = "{}_{}".format(videoname, count)
             output_path = r"{}/{}.jpg".format(output_dir, framename)
             image = cv2.resize(image, self.img_shape)
-            output = cv2.imwrite(output_path, image)
+            cv2.imwrite(output_path, image)
             success, image = vidcap.read()
             count += 1
         return
@@ -316,14 +321,15 @@ if __name__ == "__main__":
     # Setup builder
     video_path = './data/kth-actions/video'
     frame_path = './data/kth-actions/frame'
-    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=1000)
+    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=1000,
+                             max_frames=20)
 
     # Convert videos and generate metadata
-    builder.convert_videos_to_frames()
+    # builder.convert_videos_to_frames()
     metadata = builder.generate_metadata()
 
     # Build datasets
-    video_dataset_train = builder.make_video_dataset(metadata=metadata['train'])
+    video_dataset_train = builder.make_video_dataset(metadata=metadata['train']).take(20)
     video_dataset_valid = builder.make_video_dataset(metadata=metadata['valid'])
     video_dataset_test = builder.make_video_dataset(metadata=metadata['test'])
 
@@ -333,6 +339,8 @@ if __name__ == "__main__":
 
     # Verify that the datasets work
     for vid in video_dataset_train:
+        print(vid[0])
         pass
-    for frame in frame_dataset_train:
-        pass
+    # for frame in frame_dataset_train:
+    #     print(frame)
+    #     pass
