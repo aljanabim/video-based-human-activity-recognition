@@ -41,6 +41,7 @@ import cv2
 import os
 import tensorflow as tf
 import random
+import random
 
 
 class DatasetBuilder:
@@ -183,6 +184,8 @@ class DatasetBuilder:
             paths = ["{}/{}/{}".format(self.frame_path, label_name, video_name) for video_name in video_names]
             frame_folder_paths.extend(paths)
 
+        random.shuffle(frame_folder_paths)
+
         # create nested dataset
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
         frame_folder_dataset = frame_folder_paths_dataset.map(
@@ -204,7 +207,7 @@ class DatasetBuilder:
         pad_function = self._build_pad_function(self.max_frames)
         padded_videos_dataset = video_dataset.map(pad_function, num_parallel_calls=self.autotune)
 
-        return padded_videos_dataset.shuffle(10000)
+        return padded_videos_dataset.shuffle(600, reshuffle_each_iteration=True)
 
     def make_frame_dataset(self, metadata):
         """Take metadata dict and return dataset with frames."""
@@ -215,6 +218,8 @@ class DatasetBuilder:
             video_names = [name for name in video_names if name in metadata]  # Filter out set
             paths = ["{}/{}/{}".format(self.frame_path, label_name, video_name) for video_name in video_names]
             frame_folder_paths.extend(paths)
+
+        random.shuffle(frame_folder_paths)
 
         # concatenate frame paths datasets
         frame_path_subdatasets = [self._dataset_from_folder(path) for path in frame_folder_paths]
@@ -231,7 +236,7 @@ class DatasetBuilder:
             action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
         frame_dataset = frame_path_dataset.map(process_path_function, num_parallel_calls=self.autotune)
 
-        return frame_dataset.shuffle(10000000)
+        return frame_dataset.shuffle(2000, reshuffle_each_iteration=True)
 
     def convert_videos_to_frames(self):
         """Convert videos on disk to jpg frames and store on disk.
@@ -329,7 +334,7 @@ if __name__ == "__main__":
     metadata = builder.generate_metadata()
 
     # Build datasets
-    video_dataset_train = builder.make_video_dataset(metadata=metadata['train']).take(20)
+    video_dataset_train = builder.make_video_dataset(metadata=metadata['train'])
     video_dataset_valid = builder.make_video_dataset(metadata=metadata['valid'])
     video_dataset_test = builder.make_video_dataset(metadata=metadata['test'])
 
@@ -339,7 +344,7 @@ if __name__ == "__main__":
 
     # Verify that the datasets work
     for vid in video_dataset_train:
-        print(vid[0])
+        # print(vid[0])
         pass
     # for frame in frame_dataset_train:
     #     print(frame)
