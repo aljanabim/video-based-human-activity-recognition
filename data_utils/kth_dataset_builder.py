@@ -206,6 +206,15 @@ class DatasetBuilder:
         pad_function = self._build_pad_function(self.max_frames)
         padded_videos_dataset = video_dataset.map(pad_function, num_parallel_calls=self.autotune)
 
+
+        # Set shapes
+        def format_example(image, label):
+            image.set_shape((None, self.img_width, self.img_height, 1))
+            label.set_shape([self.n_classes])
+            return image, label
+
+        padded_videos_dataset = padded_videos_dataset.map(format_example, num_parallel_calls=self.autotune)
+
         return padded_videos_dataset.shuffle(10000)
 
     def make_frame_dataset(self, metadata):
@@ -325,8 +334,8 @@ if __name__ == "__main__":
     # Setup builder
     video_path = './data/kth-actions/video'
     frame_path = './data/kth-actions/frame'
-    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=1000,
-                             max_frames=5)
+    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=100,
+                             max_frames=50)
 
     # Convert videos and generate metadata
     builder.convert_videos_to_frames()
