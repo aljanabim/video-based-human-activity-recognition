@@ -41,7 +41,11 @@ import cv2
 import os
 import tensorflow as tf
 import random
+<<<<<<< HEAD
 import random
+=======
+import numpy as np
+>>>>>>> d15e2f825c1d26e19f74d33371c0cf4d4894757a
 
 
 class DatasetBuilder:
@@ -143,6 +147,7 @@ class DatasetBuilder:
 
     def _slice_from_folder(self, file):
         slice = tf.py_function(self._py_slice_from_folder, [file], tf.string)
+
         return tf.data.Dataset.list_files(slice)
 
     def _py_slice_from_folder(self, file):
@@ -207,7 +212,16 @@ class DatasetBuilder:
         pad_function = self._build_pad_function(self.max_frames)
         padded_videos_dataset = video_dataset.map(pad_function, num_parallel_calls=self.autotune)
 
-        return padded_videos_dataset.shuffle(600, reshuffle_each_iteration=True)
+
+        # Set shapes
+        def format_example(image, label):
+            image.set_shape((None, self.img_width, self.img_height, 1))
+            label.set_shape([self.n_classes])
+            return image, label
+
+        padded_videos_dataset = padded_videos_dataset.map(format_example, num_parallel_calls=self.autotune)
+
+        return padded_videos_dataset.shuffle(1000)
 
     def make_frame_dataset(self, metadata):
         """Take metadata dict and return dataset with frames."""
@@ -262,7 +276,9 @@ class DatasetBuilder:
         print("Converting videos... 0% done")
         counter = 0
         classes = os.listdir(self.video_path)
+
         for classname in classes:
+            if os.path.exists(self.frame_path + '/' + classname): continue
             os.mkdir(self.frame_path + '/' + classname)
             files = os.listdir("{}/{}".format(self.video_path, classname))
             file_paths = ["{}/{}/{}".format(self.video_path, classname, filename) for filename in files]
@@ -328,11 +344,11 @@ if __name__ == "__main__":
     # Setup builder
     video_path = './data/kth-actions/video'
     frame_path = './data/kth-actions/frame'
-    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=1000,
-                             max_frames=20)
+    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=100,
+                             max_frames=50)
 
     # Convert videos and generate metadata
-    # builder.convert_videos_to_frames()
+    builder.convert_videos_to_frames()
     metadata = builder.generate_metadata()
 
     # Build datasets
@@ -340,14 +356,17 @@ if __name__ == "__main__":
     video_dataset_valid = builder.make_video_dataset(metadata=metadata['valid'])
     video_dataset_test = builder.make_video_dataset(metadata=metadata['test'])
 
-    frame_dataset_train = builder.make_frame_dataset(metadata=metadata['train'])
-    frame_dataset_valid = builder.make_frame_dataset(metadata=metadata['valid'])
-    frame_dataset_test = builder.make_frame_dataset(metadata=metadata['test'])
+    frame_dataset_train = builder.make_frame_dataset(metadata=metadata['train']).take(10)
+    # frame_dataset_valid = builder.make_frame_dataset(metadata=metadata['valid'])
+    # frame_dataset_test = builder.make_frame_dataset(metadata=metadata['test'])
 
     # Verify that the datasets work
-    for vid in video_dataset_train:
-        # print(vid[0])
-        pass
-    # for frame in frame_dataset_train:
-    #     print(frame)
-    #     pass
+    LABELS = os.listdir(video_path)
+
+    print("THE VIDEO DATASET")
+    for vid, label in video_dataset_train:
+        print(vid.shape, LABELS[np.argmax(label.numpy())])
+
+    print("THE FRAME DATASET")
+    for frame, label in frame_dataset_train:
+        print(frame.shape, LABELS[np.argmax(label.numpy())])

@@ -3,6 +3,7 @@
 *.jpg
 *.avi
 /__pycache__/
+.vscode
 logs
 data/records
 docs/*
@@ -11,3 +12,4 @@ docs/*
 data/1000-videos/
 data/1000-videos/label/test_videofolder.txt
 data/1000-videos/label/train_videofolder.txt
+
