@@ -219,13 +219,15 @@ class DatasetBuilder:
             paths = ["{}/{}/{}".format(self.frame_path, label_name, video_name) for video_name in video_names]
             frame_folder_paths.extend(paths)
 
-        random.shuffle(frame_folder_paths)
+        frame_paths = []
+        for folder in frame_folder_paths:
+            frames = os.listdir(folder)
+            frame_paths.extend([folder + '/' + frame for frame in frames])
+
+        random.shuffle(frame_paths)
 
         # concatenate frame paths datasets
-        frame_path_subdatasets = [self._dataset_from_folder(path) for path in frame_folder_paths]
-        frame_path_dataset = frame_path_subdatasets.pop()
-        while frame_path_subdatasets:
-            frame_path_dataset = frame_path_dataset.concatenate(frame_path_subdatasets.pop())
+        frame_path_dataset = tf.data.Dataset.list_files(frame_paths)
 
         # creates list of labels
         action_label_table = tf.lookup.StaticHashTable(
