@@ -41,8 +41,8 @@ import cv2
 import os
 import tensorflow as tf
 import random
-import random
 import numpy as np
+
 
 
 class DatasetBuilder:
