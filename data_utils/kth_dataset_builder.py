@@ -218,7 +218,7 @@ class DatasetBuilder:
 
         padded_videos_dataset = padded_videos_dataset.map(format_example, num_parallel_calls=self.autotune)
 
-        return padded_videos_dataset.shuffle(1000)
+        return padded_videos_dataset
 
     def make_frame_dataset(self, metadata):
         """Take metadata dict and return dataset with frames."""
@@ -249,7 +249,7 @@ class DatasetBuilder:
             action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
         frame_dataset = frame_path_dataset.map(process_path_function, num_parallel_calls=self.autotune)
 
-        return frame_dataset.shuffle(2000, reshuffle_each_iteration=True)
+        return frame_dataset
 
     def convert_videos_to_frames(self):
         """Convert videos on disk to jpg frames and store on disk.
