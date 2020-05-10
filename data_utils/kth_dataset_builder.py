@@ -45,6 +45,7 @@ sys.path.append('./')
 sys.path.append('../')
 import tensorflow as tf
 import random
+import numpy as np
 
 
 class DatasetBuilder:
@@ -147,6 +148,7 @@ class DatasetBuilder:
 
     def _slice_from_folder(self, file):
         slice = tf.py_function(self._py_slice_from_folder, [file], tf.string)
+
         return tf.data.Dataset.list_files(slice)
 
     def _py_slice_from_folder(self, file):
@@ -190,6 +192,8 @@ class DatasetBuilder:
                      for video_name in video_names]
             frame_folder_paths.extend(paths)
 
+        random.shuffle(frame_folder_paths)
+
         # create nested dataset
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(
             frame_folder_paths)
@@ -213,7 +217,17 @@ class DatasetBuilder:
         padded_videos_dataset = video_dataset.map(
             pad_function, num_parallel_calls=self.autotune)
 
-        return padded_videos_dataset.shuffle(10000)
+        # Set shapes
+
+        def format_example(image, label):
+            image.set_shape((None, self.img_width, self.img_height, 1))
+            label.set_shape([self.n_classes])
+            return image, label
+
+        padded_videos_dataset = padded_videos_dataset.map(
+            format_example, num_parallel_calls=self.autotune)
+
+        return padded_videos_dataset
 
     def make_frame_dataset(self, metadata):
         """Take metadata dict and return dataset with frames."""
@@ -227,13 +241,15 @@ class DatasetBuilder:
                      for video_name in video_names]
             frame_folder_paths.extend(paths)
 
+        frame_paths = []
+        for folder in frame_folder_paths:
+            frames = os.listdir(folder)
+            frame_paths.extend([folder + '/' + frame for frame in frames])
+
+        random.shuffle(frame_paths)
+
         # concatenate frame paths datasets
-        frame_path_subdatasets = [self._dataset_from_folder(
-            path) for path in frame_folder_paths]
-        frame_path_dataset = frame_path_subdatasets.pop()
-        while frame_path_subdatasets:
-            frame_path_dataset = frame_path_dataset.concatenate(
-                frame_path_subdatasets.pop())
+        frame_path_dataset = tf.data.Dataset.list_files(frame_paths)
 
         # creates list of labels
         action_label_table = tf.lookup.StaticHashTable(
@@ -245,7 +261,7 @@ class DatasetBuilder:
         frame_dataset = frame_path_dataset.map(
             process_path_function, num_parallel_calls=self.autotune)
 
-        return frame_dataset.shuffle(10000000)
+        return frame_dataset
 
     def convert_videos_to_frames(self):
         """Convert videos on disk to jpg frames and store on disk.
@@ -269,7 +285,10 @@ class DatasetBuilder:
         print("Converting videos... 0% done")
         counter = 0
         classes = os.listdir(self.video_path)
+
         for classname in classes:
+            if os.path.exists(self.frame_path + '/' + classname):
+                continue
             os.mkdir(self.frame_path + '/' + classname)
             files = os.listdir("{}/{}".format(self.video_path, classname))
             file_paths = [
@@ -337,30 +356,32 @@ if __name__ == "__main__":
     # Setup builder
     video_path = './data/kth-actions/video'
     frame_path = './data/kth-actions/frame'
-    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=1000,
-                             max_frames=20)
+    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=100,
+                             max_frames=50)
 
     # Convert videos and generate metadata
-    # builder.convert_videos_to_frames()
+    builder.convert_videos_to_frames()
     metadata = builder.generate_metadata()
 
     # Build datasets
     video_dataset_train = builder.make_video_dataset(
-        metadata=metadata['train']).take(20)
+        metadata=metadata['train'])
     video_dataset_valid = builder.make_video_dataset(
         metadata=metadata['valid'])
     video_dataset_test = builder.make_video_dataset(metadata=metadata['test'])
 
     frame_dataset_train = builder.make_frame_dataset(
-        metadata=metadata['train'])
-    frame_dataset_valid = builder.make_frame_dataset(
-        metadata=metadata['valid'])
-    frame_dataset_test = builder.make_frame_dataset(metadata=metadata['test'])
+        metadata=metadata['train']).take(10)
+    # frame_dataset_valid = builder.make_frame_dataset(metadata=metadata['valid'])
+    # frame_dataset_test = builder.make_frame_dataset(metadata=metadata['test'])
 
     # Verify that the datasets work
-    for vid in video_dataset_train:
-        print(vid[0])
-        pass
-    # for frame in frame_dataset_train:
-    #     print(frame)
-    #     pass
+    LABELS = os.listdir(video_path)
+
+    print("THE VIDEO DATASET")
+    for vid, label in video_dataset_train:
+        print(vid.shape, LABELS[np.argmax(label.numpy())])
+
+    print("THE FRAME DATASET")
+    for frame, label in frame_dataset_train:
+        print(frame.shape, LABELS[np.argmax(label.numpy())])
