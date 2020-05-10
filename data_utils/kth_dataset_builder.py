@@ -237,7 +237,7 @@ class DatasetBuilder:
 
         random.shuffle(frame_paths)
 
-        # concatenate frame paths datasets
+        # make dataset of frame paths
         frame_path_dataset = tf.data.Dataset.list_files(frame_paths)
 
         # creates list of labels
