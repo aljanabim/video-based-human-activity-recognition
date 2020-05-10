@@ -4,8 +4,8 @@
     label_dict = metadata_loader.get_label_dict()
 """
 import sys
-sys.path.append('../')
 sys.path.append('.')
+sys.path.append('../')
 
 from config import Config
 
@@ -68,7 +68,7 @@ class MetadataLoader:
 
 if __name__ == "__main__":
 
-    config = Config()
+    config = Config(root_path='./data/1000-videos', use_subfolders=True)
     metadata_loader = MetadataLoader(config)
     metadata = metadata_loader.load_metadata()
     label_dict = metadata_loader.get_label_dict()

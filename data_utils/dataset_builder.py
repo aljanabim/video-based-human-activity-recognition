@@ -100,7 +100,8 @@ class DatasetBuilder:
     def _build_stack_images_from_path_function(self, process_path_function):
 
         def _stack_images_from_path(ds):
-            labeled_ds = ds.map(process_path_function, num_parallel_calls=self.autotune)
+            labeled_ds = ds.map(process_path_function,
+                                num_parallel_calls=self.autotune)
 
             # temp variables
             label = tf.constant(0, dtype=tf.int32)
@@ -120,15 +121,15 @@ class DatasetBuilder:
         return _stack_images_from_path
 
     def _dataset_from_folder(self, file):
-        return tf.data.Dataset.list_files(file+"/*", shuffle=False)
+        return tf.data.Dataset.list_files(file + "/*", shuffle=False)
 
     def _build_pad_function(self, max_frames):
 
         def _pad(stacked_im, label):
             nr = max_frames - stacked_im.get_shape().as_list()[0]
 
-            paddings = tf.constant([[0, nr], [0, 0], [0,0], [0,0]])
-            new = tf.pad(stacked_im, paddings,"CONSTANT")
+            paddings = tf.constant([[0, nr], [0, 0], [0, 0], [0, 0]])
+            new = tf.pad(stacked_im, paddings, "CONSTANT")
             return new, label
 
         def _pad_fn(stacked_im, label):
@@ -142,17 +143,21 @@ class DatasetBuilder:
     def make_video_dataset(self, metadata):
         """Take list of frame folder paths and return dataset with videos."""
 
-        video_id_list = [id for id in os.listdir(self.frame_path) if int(id) in metadata]
+        video_id_list = [id for id in os.listdir(
+            self.frame_path) if int(id) in metadata]
         # creates a dataset containing frame folder paths
-        frame_folder_paths = [self.frame_path + "/" + id for id in video_id_list]
-        frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
+        frame_folder_paths = [self.frame_path +
+                              "/" + id for id in video_id_list]
+        frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(
+            frame_folder_paths)
 
         # creates dataset containing datasets of frame paths
         frame_folder_dataset = frame_folder_paths_dataset.map(
             self._dataset_from_folder, num_parallel_calls=self.autotune)
 
         # creates list of labels
-        action_labels = [metadata[int(id)]['action_label'] for id in video_id_list]
+        action_labels = [metadata[int(id)]['action_label']
+                         for id in video_id_list]
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
 
@@ -172,30 +177,37 @@ class DatasetBuilder:
 
     def make_frame_dataset(self, metadata):
         """Take list of frame folder paths and return dataset with frames."""
-        video_id_list = [id for id in os.listdir(self.frame_path) if int(id) in metadata]
-        frame_folder_paths = [self.frame_path + "/" + id for id in video_id_list]
+        video_id_list = [id for id in os.listdir(
+            self.frame_path) if int(id) in metadata]
+        frame_folder_paths = [self.frame_path +
+                              "/" + id for id in video_id_list]
 
         # creates a dataset containing frame folder paths
-        frame_path_subdatasets = [self._dataset_from_folder(path) for path in frame_folder_paths]
+        frame_path_subdatasets = [self._dataset_from_folder(
+            path) for path in frame_folder_paths]
 
-        if len(frame_path_subdatasets)==0: return
+        if len(frame_path_subdatasets) == 0:
+            return
 
         frame_path_dataset = frame_path_subdatasets.pop()
         while frame_path_subdatasets:
-            frame_path_dataset = frame_path_dataset.concatenate(frame_path_subdatasets.pop())
+            frame_path_dataset = frame_path_dataset.concatenate(
+                frame_path_subdatasets.pop())
 
         # for path in frame_path_dataset:
         #     print(path)
 
         # creates list of labels
-        action_labels = [metadata[int(id)]['action_label'] for id in video_id_list]
+        action_labels = [metadata[int(id)]['action_label']
+                         for id in video_id_list]
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(video_id_list, action_labels), -1)
 
         process_path_function = self._build_process_path_function(
             action_label_table, self.img_width, self.img_height, n_classes=self.n_classes)
 
-        frame_dataset = frame_path_dataset.map(process_path_function, num_parallel_calls=self.autotune)
+        frame_dataset = frame_path_dataset.map(
+            process_path_function, num_parallel_calls=self.autotune)
 
         return frame_dataset
 
