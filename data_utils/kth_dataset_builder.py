@@ -42,7 +42,7 @@ import os
 import tensorflow as tf
 import random
 import numpy as np
-
+import time
 
 
 class DatasetBuilder:
@@ -187,7 +187,7 @@ class DatasetBuilder:
             frame_folder_paths.extend(paths)
 
         random.shuffle(frame_folder_paths)
-
+        
         # create nested dataset
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(frame_folder_paths)
         frame_folder_dataset = frame_folder_paths_dataset.map(
@@ -218,7 +218,7 @@ class DatasetBuilder:
 
         padded_videos_dataset = padded_videos_dataset.map(format_example, num_parallel_calls=self.autotune)
 
-        return padded_videos_dataset.shuffle(1000)
+        return padded_videos_dataset
 
     def make_frame_dataset(self, metadata):
         """Take metadata dict and return dataset with frames."""
@@ -238,8 +238,9 @@ class DatasetBuilder:
         random.shuffle(frame_paths)
 
         # concatenate frame paths datasets
-        frame_path_dataset = tf.data.Dataset.list_files(frame_paths)
-
+        #frame_path_dataset = tf.data.Dataset.list_files(frame_paths) # slow for me
+        frame_path_dataset = tf.data.Dataset.from_tensor_slices(frame_paths)
+        
         # creates list of labels
         action_label_table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(self.label_names, self.label_ints), -1)
@@ -341,7 +342,7 @@ if __name__ == "__main__":
     # Setup builder
     video_path = './data/kth-actions/video'
     frame_path = './data/kth-actions/frame'
-    builder = DatasetBuilder(video_path, frame_path, img_width=84, img_height=84, ms_per_frame=100,
+    builder = DatasetBuilder(video_path, frame_path, img_width=120, img_height=120, ms_per_frame=100,
                              max_frames=50)
 
     # Convert videos and generate metadata
@@ -349,11 +350,11 @@ if __name__ == "__main__":
     metadata = builder.generate_metadata()
 
     # Build datasets
-    video_dataset_train = builder.make_video_dataset(metadata=metadata['train'])
-    video_dataset_valid = builder.make_video_dataset(metadata=metadata['valid'])
-    video_dataset_test = builder.make_video_dataset(metadata=metadata['test'])
+    video_dataset_train = builder.make_video_dataset(metadata=metadata['train']).take(2)
+    # video_dataset_valid = builder.make_video_dataset(metadata=metadata['valid'])
+    # video_dataset_test = builder.make_video_dataset(metadata=metadata['test'])
 
-    frame_dataset_train = builder.make_frame_dataset(metadata=metadata['train']).take(10)
+    frame_dataset_train = builder.make_frame_dataset(metadata=metadata['train']).take(1000)
     # frame_dataset_valid = builder.make_frame_dataset(metadata=metadata['valid'])
     # frame_dataset_test = builder.make_frame_dataset(metadata=metadata['test'])
 
@@ -365,5 +366,5 @@ if __name__ == "__main__":
         print(vid.shape, LABELS[np.argmax(label.numpy())])
 
     print("THE FRAME DATASET")
-    for frame, label in frame_dataset_train:
+    for frame, label in frame_dataset_train.batch(20):
         print(frame.shape, LABELS[np.argmax(label.numpy())])
