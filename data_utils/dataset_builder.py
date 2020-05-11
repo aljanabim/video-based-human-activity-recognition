@@ -1,4 +1,4 @@
-r"""Module for building datasets that load procedurally from drive.
+"""Module for building datasets that load procedurally from drive.
 
 Example:
     # define paths
