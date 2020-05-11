@@ -1,0 +1,90 @@
+{
+    "trial_id": "422356ddae275e9d4ae88071f3aa3318",
+    "hyperparameters": {
+        "space": [
+            {
+                "class_name": "Choice",
+                "config": {
+                    "name": "optimizer",
+                    "default": "Adam",
+                    "values": [
+                        "Adam",
+                        "SGD",
+                        "RMSprop"
+                    ],
+                    "ordered": false
+                }
+            },
+            {
+                "class_name": "Float",
+                "config": {
+                    "name": "kernel_regularizer",
+                    "default": 0.0001,
+                    "min_value": 0.0001,
+                    "max_value": 0.01,
+                    "step": null,
+                    "sampling": "log"
+                }
+            }
+        ],
+        "values": {
+            "optimizer": "RMSprop",
+            "kernel_regularizer": 0.0025836130092226042,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 0,
+            "tuner/round": 0
+        }
+    },
+    "metrics": {
+        "metrics": {
+            "loss": {
+                "direction": "min",
+                "observations": [
+                    {
+                        "value": [
+                            0.5568098425865173
+                        ],
+                        "step": 0
+                    }
+                ]
+            },
+            "accuracy": {
+                "direction": "max",
+                "observations": [
+                    {
+                        "value": [
+                            0.7420635024706522
+                        ],
+                        "step": 0
+                    }
+                ]
+            },
+            "val_loss": {
+                "direction": "min",
+                "observations": [
+                    {
+                        "value": [
+                            0.5003760357697805
+                        ],
+                        "step": 0
+                    }
+                ]
+            },
+            "val_accuracy": {
+                "direction": "max",
+                "observations": [
+                    {
+                        "value": [
+                            0.7259259223937988
+                        ],
+                        "step": 0
+                    }
+                ]
+            }
+        }
+    },
+    "score": 0.7259259223937988,
+    "best_step": 0,
+    "status": "COMPLETED"
+}

@@ -175,4 +175,4 @@ if __name__ == "__main__":
     valid_ds_scaled = valid_ds.map(format_example)
     test_ds_scaled = test_ds.map(format_example)
 
-    inception_classifier.fit(train_ds_scaled.shuffle(100).batch(25).prefetch(1), validation_data=valid_ds_scaled.batch(1), epochs=10)
+    inception_classifier.fit(train_ds_scaled.shuffle(100).batch(12).prefetch(1), validation_data=valid_ds_scaled.batch(1), epochs=10)

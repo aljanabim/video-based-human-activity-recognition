@@ -1,0 +1,90 @@
+{
+    "ongoing_trials": {
+        "tuner0": "437c00c36e2c533e6f16bca8042c2405"
+    },
+    "hyperparameters": {
+        "space": [
+            {
+                "class_name": "Choice",
+                "config": {
+                    "name": "optimizer",
+                    "default": "Adam",
+                    "values": [
+                        "Adam",
+                        "SGD",
+                        "RMSprop"
+                    ],
+                    "ordered": false
+                }
+            },
+            {
+                "class_name": "Float",
+                "config": {
+                    "name": "kernel_regularizer",
+                    "default": 0.0001,
+                    "min_value": 0.0001,
+                    "max_value": 0.01,
+                    "step": null,
+                    "sampling": "log"
+                }
+            }
+        ],
+        "values": {
+            "optimizer": "Adam",
+            "kernel_regularizer": 0.0001
+        }
+    },
+    "hyperband_iterations": 1,
+    "max_epochs": 20,
+    "min_epochs": 1,
+    "factor": 3,
+    "seed": 8645,
+    "max_collisions": 20,
+    "seed_state": 8686,
+    "tried_so_far": [
+        "aa0a5d2693231be3d65f2b26ac6db077",
+        "c40d2f686c7cb40708f2da85e2fbb1e6",
+        "3105578061369a978b25490d86581e38",
+        "a2933c3ca24ec2aa869ddf45bb25589b",
+        "f14cfe2588375fbb50aad7e13982ac2f",
+        "dff05bda6b7cf692a362afe70f0c3b46",
+        "9325ae41e78149354cab98b45293a554",
+        "0f472a967fc6c3d76b8cf06d28e4e4be",
+        "7df00e6655eec878f4bdcea946156110",
+        "f6235e1aaca3ff2db73661ccfd9fd400",
+        "cc7ae39569c187b856376674940eda16",
+        "d9025f5c5af3abff65c655550d1e0e0c",
+        "6798532c15775095fe1161e16ecae3e1",
+        "48294a0ad89a47860e8097f22e7f3a42",
+        "80fda93219ce1dbe225741de5af0bec2",
+        "e3cdd0043dd15ac8ba9ec24202896a75",
+        "608219ed1043b626339bced010e65cd9",
+        "1c126a59498c9d13668ad2b797a15204",
+        "7e1c92d9535cc251571db4ea87a038cc",
+        "efe0e92c1664adeee7f142658e9c344d",
+        "c8de438f2bcac3c6e896513d56643b20"
+    ],
+    "brackets": [
+        {
+            "bracket_num": 0,
+            "rounds": [
+                [
+                    {
+                        "past_id": null,
+                        "id": "9fd2f9dfc028327c962eb5a11dfe6e29"
+                    },
+                    {
+                        "past_id": null,
+                        "id": "422356ddae275e9d4ae88071f3aa3318"
+                    },
+                    {
+                        "past_id": null,
+                        "id": "437c00c36e2c533e6f16bca8042c2405"
+                    }
+                ]
+            ]
+        }
+    ],
+    "current_bracket": 0,
+    "current_iteration": 0
+}
