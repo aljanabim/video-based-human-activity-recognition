@@ -25,8 +25,8 @@ from tensorflow.keras.losses import CategoricalCrossentropy
 USE_TRIMMED = True  # use the trimmed larger data set of KTH videos
 
 if USE_TRIMMED:
-    video_path = './data/kth-actions/video_trimmed'
-    frame_path = './data/kth-actions/frame_trimmed'
+    video_path = '../data/kth-actions/video_trimmed'
+    frame_path = '../data/kth-actions/frame_trimmed'
 else:
     video_path = './data/kth-actions/video'
     frame_path = './data/kth-actions/frame'
@@ -110,3 +110,4 @@ for i in range(100):
 print(avg / 100)
 
 # Last avg with 50 epochs and untrimmed data set gives 0.6695555579662323
+# Last avg with 50 epochs and trimmed data set gives 0.7825069636106491
