@@ -2,8 +2,9 @@
 *.pyc
 *.jpg
 *.avi
+*.zip
 /__pycache__/
-.vscode
+settings.json
 logs
 data/records
 docs/*
