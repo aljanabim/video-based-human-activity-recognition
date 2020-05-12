@@ -129,6 +129,14 @@ def export_frames_info(path):
 
 if __name__ == "__main__":
     SHOW_EXAMPLE = True
+    path_to_txt_info_file = './data/kth-actions/00sequences.txt'
+    path_to_pkl_info_file = './data/kth-actions/frames_info.pkl'
+    if not os.path.exists(path_to_pkl_info_file):
+        print("Didn't find pkl file, will generate it and import it")
+        export_frames_info(path_to_txt_info_file)
+    else:
+        print("Found pkl file, importing it")
+
     with open('./data/kth-actions/frames_info.pkl', 'rb') as target:
         frames_info = pickle.load(target)
     if SHOW_EXAMPLE:
@@ -144,9 +152,10 @@ if __name__ == "__main__":
         d['frames_from'] = v['from']
         d['frames_to'] = v['to']
         llist.append(d)
-
-    for elem in llist:
+    n_videos = len(llist)
+    for i, elem in enumerate(llist):
+        print("Trimming videos ...", round(i / n_videos) * 100, "%")
         trim_vid(elem,
                  root_path='./data/kth-actions',
                  input_path='./data/kth-actions/video',
-                 output_path='./data/kth-actions/trimmed')
+                 output_path='./data/kth-actions/video_trimmeds')
