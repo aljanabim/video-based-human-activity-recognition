@@ -13,4 +13,5 @@ data/1000-videos/
 data/1000-videos/label/test_videofolder.txt
 data/1000-videos/label/train_videofolder.txt
 
-tuning_resutls
+tuning_results/
+trained_models/
