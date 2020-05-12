@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 import sys
 sys.path.insert(0, os.path.dirname('.'))
 sys.path.insert(0, os.path.dirname('../'))
