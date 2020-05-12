@@ -91,11 +91,12 @@ model = My_Video_Classifier(features=featuer_ex, class_nr=6)
 # model.summary()
 # %%
 model.fit(train_ds.shuffle(80).batch(14).prefetch(1),
-          validation_data=valid_ds.batch(1), epochs=20)
+          validation_data=valid_ds.batch(1), epochs=50)
+
 # SO far 70 epoch
 
 # %%
-model.save('trained_models/LSTM_70epochs')
+model.save('trained_models/LSTM_50epochs')
 # %%
 avg = 0
 for i in range(100):
