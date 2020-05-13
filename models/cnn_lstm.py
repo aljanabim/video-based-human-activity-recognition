@@ -10,7 +10,7 @@ from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.regularizers import l2
 from data_utils import kth_dataset_builder
 
-IMG_WIDTH, IMG_HEIGHT = 84, 84
+IMG_WIDTH, IMG_HEIGHT = 120, 120
 
 def Imagenet(input_shape=(160, 160, 3), name ='inception', weights=False, trainable=False, include_top=False):
     # Create the base model pre-trained on imagenet
@@ -35,34 +35,33 @@ def Imagenet(input_shape=(160, 160, 3), name ='inception', weights=False, traina
     return base_model
 
 def load_basic_cnn_lite():
-    checkpoint_path = "./models/checkpoints/basic_cnn_lite"
+    checkpoint_path = "./models/checkpoints/basic_cnn_lite_3"
     model = tf.keras.models.Sequential([
-        tf.keras.Input(shape=(84, 84, 1)),
         tf.keras.layers.Conv2D(32,
                                4,
                                padding='same', activation='relu',
                                input_shape=(IMG_WIDTH, IMG_HEIGHT, 1)),
-        tf.keras.layers.BatchNormalization(),
         tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Dropout(0.2),
         tf.keras.layers.Conv2D(56,
                                5,
                                padding='same', activation='relu',
                                input_shape=(IMG_WIDTH, IMG_HEIGHT, 1)),
-        tf.keras.layers.BatchNormalization(),
         tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Dropout(0.2),
         tf.keras.layers.Conv2D(72,
-                               5,
-                               padding='same', activation='relu',
-                               input_shape=(IMG_WIDTH, IMG_HEIGHT, 1)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.MaxPooling2D(),
-        tf.keras.layers.Conv2D(56,
                                4,
                                padding='same', activation='relu',
                                input_shape=(IMG_WIDTH, IMG_HEIGHT, 1)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.MaxPooling2D()
-        ])
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Conv2D(80,
+                               3,
+                               padding='same', activation='relu',
+                               input_shape=(IMG_WIDTH, IMG_HEIGHT, 1)),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Dropout(0.2),
+            ])
     model.load_weights(checkpoint_path)
     model.trainable = False
     # model.summary()
@@ -94,9 +93,9 @@ def LSTM_Video_Classifier(features, class_nr, optimizer='adam'):
     full_model = tf.keras.Sequential([
         features,
         Dense(128, kernel_initializer="he_normal"),
-        LSTM(512, input_shape=(None,128)),
-        # Dense(512, kernel_initializer="he_normal"),
-        Dropout(rate=0.4),
+        LSTM(128, input_shape=(None,128)),
+        Dense(512, kernel_initializer="he_normal"),
+        BatchNormalization(),
         Dense(class_nr)
         ])
 
@@ -124,6 +123,21 @@ def AVG_Video_Classifier(features, class_nr, optimizer='adam'):
 
     return full_model
 
+# svm classifier
+def SVM_Video_Classifier(features, class_nr, optimizer='adam'):
+    # model
+    full_model = tf.keras.Sequential([
+        features,
+        GlobalAveragePooling1D(),
+        Dense(class_nr, kernel_regularizer=l2(0.001)),
+        ])
+
+    full_model.compile(loss='hinge',
+                optimizer='adam',
+                metrics=['accuracy'])
+
+    return full_model
+
 
 
 # Doc:
@@ -139,27 +153,35 @@ AVG_Video_Classifier(): returns an example model on how to use the returned fram
 """
 
 if __name__ == "__main__":
-    # 1) Setup basic_cnn model
+    # # 1) Setup basic_cnn model
     # basic_cnn = load_basic_cnn_lite()
     # basic_cnn_extractor = Video_Feature_Extractor(basic_cnn)
-    # basic_cnn_classifier = LSTM_Video_Classifier(features=basic_cnn_extractor, class_nr=6, optimizer=RMSprop(lr=0.0001))
+    # basic_cnn_lstm_classifier = LSTM_Video_Classifier(features=basic_cnn_extractor, class_nr=6)
+    # basic_cnn_avg_classifier = AVG_Video_Classifier(features=basic_cnn_extractor, class_nr=6)
+    # basic_cnn_svm_classifier = SVM_Video_Classifier(features=basic_cnn_extractor, class_nr=6)
+    #
+    # # 2a) Setup mobilnet model
+    # mobilnet = Imagenet(name='mobilnet')
+    # mobilnet_extractor = Video_Feature_Extractor(mobilnet)
+    # mobilnet_classifier = LSTM_Video_Classifier(features=mobilnet_extractor, class_nr=6)
+    #
+    # # 2b) Setup inception model
+    # inception = Imagenet(input_shape=(160, 160, 3), name='inception')
+    # inception_extractor = Video_Feature_Extractor(inception)
+    # inception_classifier = LSTM_Video_Classifier(features=inception_extractor, class_nr=6)
 
-    # 2) Setup mobilnet model
-    mobilnet = Imagenet(name='mobilnet')
-    mobilnet_extractor = Video_Feature_Extractor(mobilnet)
-    mobilnet_classifier = LSTM_Video_Classifier(features=mobilnet_extractor, class_nr=6)
-
-    # 3) Setup inception model
+    # 2c) Setup SVM model
     inception = Imagenet(input_shape=(160, 160, 3), name='inception')
     inception_extractor = Video_Feature_Extractor(inception)
-    inception_classifier = LSTM_Video_Classifier(features=inception_extractor, class_nr=6)
+    svm_classifier = SVM_Video_Classifier(features=inception_extractor, class_nr=6)
 
-    # 4) Prep data
+
+    # 3) Prep data
     video_path = './data/kth-actions/video'
     frame_path = './data/kth-actions/frame'
 
     builder = kth_dataset_builder.DatasetBuilder(
-        video_path, frame_path, img_width=IMG_WIDTH, img_height=IMG_HEIGHT, ms_per_frame=100, max_frames=20)
+        video_path, frame_path, img_width=IMG_WIDTH, img_height=IMG_HEIGHT, ms_per_frame=100, max_frames=16)
     metadata = builder.generate_metadata()
 
     train_ds = builder.make_video_dataset(metadata=metadata['train'])
@@ -175,4 +197,9 @@ if __name__ == "__main__":
     valid_ds_scaled = valid_ds.map(format_example)
     test_ds_scaled = test_ds.map(format_example)
 
-    inception_classifier.fit(train_ds_scaled.shuffle(100).batch(12).prefetch(1), validation_data=valid_ds_scaled.batch(1), epochs=10)
+    # 4) Train
+
+    # mobilnet_classifier.fit(train_ds_scaled.shuffle(100).batch(12).prefetch(1), validation_data=valid_ds_scaled.batch(1), epochs=10)
+    # inception_classifier.fit(train_ds_scaled.shuffle(100).batch(12).prefetch(1), validation_data=valid_ds_scaled.batch(1), epochs=10)
+    svm_classifier.fit(train_ds_scaled.shuffle(100).batch(12).prefetch(1),validation_data=valid_ds_scaled.batch(1), epochs=5)
+    # basic_cnn_svm_classifier.fit(train_ds.shuffle(100).batch(12).prefetch(1),validation_data=valid_ds.batch(1), epochs=5)
