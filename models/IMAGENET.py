@@ -108,3 +108,19 @@ if __name__ == "__main__":
 
     avg_video_classifier = AVG_Video_Classifier(features=featuer_ex2, class_nr=6, optimizer=RMSprop(lr=0.0001))
     avg_video_classifier.summary()
+
+    # How to save
+    print("PREDICT:",lstm_video_classifier.predict(np.ones((1,16,160,160,3))))
+    print("SAVING")
+    # Save only weights
+    lstm_video_classifier.save_weights("bullshit/")
+    lstm_video_classifier = None
+
+    print("LOADING")
+    # Create model
+    inception = Imagenet(name='inception')
+    featuer_ex1 = Video_Feature_Extractor(inception)
+    model = LSTM_Video_Classifier(features=featuer_ex1, class_nr=6, optimizer=RMSprop(lr=0.0001))
+    # load weights
+    model.load_weights("bullshit/")
+    print("PREDICT:",model(np.ones((1,16,160,160,3))))
