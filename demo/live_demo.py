@@ -1,40 +1,44 @@
+#
 from tensorflow.keras.models import load_model
 from collections import deque
 import numpy as np
 import argparse
 import pickle
 import cv2
+import time
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
-# ap.add_argument("-m", "--model", required=True,
-# 	help="path to trained serialized model")
+ap.add_argument("-m", "--model", required=True,
+	help="path to trained serialized model")
 ap.add_argument("-i", "--input", required=True,
 	help="path to our input video")
 ap.add_argument("-o", "--output", required=True,
 	help="path to our output video")
 ap.add_argument("-s", "--size", type=int, default=128,
 	help="size of queue for averaging")
-
+ap.add_argument("-bs", "--buffer_size", type=int, default=16,
+	help="size of queue for averaging")
 
 args = vars(ap.parse_args())
 # load the trained modelfrom disk
 print("[INFO] loading model ...")
-# model = load_model(args["model"])
+model = load_model(args["model"])
 lb = ["first","second", "third","mustafa", "einar","mikel"]
 
 # initialize the image mean for mean subtraction along with the
 # predictions queue
-
+Buffer = deque(maxlen=args["buffer_size"])
 Q = deque(maxlen=args["size"])
 
 
 # initialize the video stream(input video or camera)
-# vs = cv2.VideoCapture(args["input"]) #<--- input video
-vs = cv2.VideoCapture(0) #<--- camera
+vs = cv2.VideoCapture(args["input"])
+# vs = cv2.VideoCapture(0) #<--- camera
 writer = None #pointer to output video file
 (W, H) = (None, None)
 # loop over frames from the video file stream
 while True:
+    time.sleep(0.1)
 	# read the next frame from the file
     (grabbed, frame) = vs.read()
 	# if the frame was not grabbed, then we have reached the end
@@ -48,13 +52,16 @@ while True:
     
     #TODO: frame to blacknwhite if necesary
     #TODO: keep deque with frames
-    # frame to be augmented for output    
+    # frame to be augmented for output
+    model_input = cv2.resize(frame,(160,160))
+    model_input = cv2.cvtColor(model_input, cv2.COLOR_BGR2GRAY)[:,:,np.newaxis]
+
+    Buffer.append(cv2.resize(model_input,(160,160)))
     output = frame.copy()
 
     # preds = model.predict(np.expand_dims(frame, axis=0))[0]
     preds = np.random.rand(1,6)
     Q.append(preds)
-
     # perform prediction averaging over the current history of
     # previous predictions
     results = np.array(Q).mean(axis=0)
@@ -77,7 +84,7 @@ while True:
     cv2.imshow("Output", output)
     key = cv2.waitKey(1) & 0xFF
 	
-    if key == ord("q"): # break if the `q` key is pressed
+    if key == ord("q"): # break if the `q` key is pressed-*
         break
     
     # break
