@@ -12,6 +12,7 @@ import pickle
 import cv2
 import time
 
+#TODO: buffer frames with 10fps
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
