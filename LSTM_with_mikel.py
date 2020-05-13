@@ -22,8 +22,14 @@ from tensorflow.keras.optimizers import RMSprop
 from tensorflow.keras.losses import CategoricalCrossentropy
 
 # Load Dataset
-video_path = './data/kth-actions/video'
-frame_path = './data/kth-actions/frame'
+USE_TRIMMED = True  # use the trimmed larger data set of KTH videos
+
+if USE_TRIMMED:
+    video_path = '../data/kth-actions/video_trimmed'
+    frame_path = '../data/kth-actions/frame_trimmed'
+else:
+    video_path = './data/kth-actions/video'
+    frame_path = './data/kth-actions/frame'
 # Setup builder
 # video_path = '../data/kth-actions/video'
 # frame_path = '../data/kth-actions/frame'
@@ -50,8 +56,8 @@ def format_example(image, label):
     return image, label
 
 
-train_ds = train_ds.map(format_example)
-valid_ds = valid_ds.map(format_example)
+train_ds = train_ds.map(format_example)  # with trimmed we have 1675
+valid_ds = valid_ds.map(format_example)  # with trimmed we have 359
 
 # Print
 for x, lab in valid_ds.take(1):
@@ -91,13 +97,17 @@ model = My_Video_Classifier(features=featuer_ex, class_nr=6)
 # model.summary()
 # %%
 model.fit(train_ds.shuffle(80).batch(14).prefetch(1),
-          validation_data=valid_ds.batch(1), epochs=20)
+          validation_data=valid_ds.batch(1), epochs=50)
+
 # SO far 70 epoch
 
 # %%
-model.save('trained_models/LSTM_70epochs')
+model.save('trained_models/LSTM_50epochs_trimmed')
 # %%
 avg = 0
 for i in range(100):
     avg += model.evaluate(valid_ds.batch(1))[1]
 print(avg / 100)
+
+# Last avg with 50 epochs and untrimmed data set gives 0.6695555579662323
+# Last avg with 50 epochs and trimmed data set gives 0.7825069636106491

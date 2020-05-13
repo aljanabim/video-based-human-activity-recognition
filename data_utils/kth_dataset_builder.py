@@ -48,6 +48,7 @@ import random
 import numpy as np
 import time
 
+
 class DatasetBuilder:
     """Converts videos to jpg and builds datasets."""
 
@@ -241,18 +242,20 @@ class DatasetBuilder:
         # get relevant folder paths
         frame_folder_paths = []
         for label_name in self.label_names:
-            video_names = os.listdir(self.frame_path + self.separator + label_name)
+            video_names = os.listdir(
+                self.frame_path + self.separator + label_name)
             # Filter out set
             video_names = [name for name in video_names if name in metadata]
             paths = ["{}{}{}{}{}".format(
                 self.frame_path, self.separator, label_name, self.separator, video_name)
-                     for video_name in video_names]
+                for video_name in video_names]
             frame_folder_paths.extend(paths)
 
         frame_paths = []
         for folder in frame_folder_paths:
             frames = os.listdir(folder)
-            frame_paths.extend([folder + self.separator + frame for frame in frames])
+            frame_paths.extend(
+                [folder + self.separator + frame for frame in frames])
 
         random.shuffle(frame_paths)
 
@@ -363,8 +366,8 @@ class DatasetBuilder:
 
 if __name__ == "__main__":
     # Setup builder
-    video_path = './data/kth-actions/video'
-    frame_path = './data/kth-actions/frame'
+    video_path = './data/kth-actions/video_trimmed'
+    frame_path = './data/kth-actions/frame_trimmed'
     builder = DatasetBuilder(video_path, frame_path, img_width=120, img_height=120, ms_per_frame=100,
                              max_frames=50)
 

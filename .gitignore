@@ -2,6 +2,7 @@
 *.pyc
 *.jpg
 *.avi
+*.zip
 /__pycache__/
 .vscode
 logs
