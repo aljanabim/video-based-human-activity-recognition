@@ -7,6 +7,7 @@ from collections import deque
 import time
 np.set_printoptions(threshold=sys.maxsize)
 import tensorflow as tf
+
 # from tensorflow import keras
 # %%
 model = tf.keras.models.load_model(
@@ -14,10 +15,6 @@ model = tf.keras.models.load_model(
 
 # %%
 labels = os.listdir('../data/kth-actions/frame_trimmed')
-# x = tf.random.normal((1, 16, 160, 160, 3))
-# pred = labels[np.argmax(model(x).numpy)]
-# print(pred)
-# model(x)
 # %%
 frames_per_prediction = 16
 buffer = deque(maxlen=frames_per_prediction)
@@ -31,51 +28,55 @@ cap_links = [
     './videos/2_of_each.avi'
 ]
 
-cap = cv2.VideoCapture(cap_links[4])
-
-# cap = cv2.VideoCapture(0)
+USE_CAMERA = True
+if USE_CAMERA:
+    cap = cv2.VideoCapture(0)
+    font_size = 0.8
+else:
+    cap = cv2.VideoCapture(cap_links[1])
+    font_size = 0.25
 print(labels)
 
+
+length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+curr_frame_nr = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+font = cv2.FONT_HERSHEY_SIMPLEX
 IMG_SIZE = 160  # All images will be resized to 160x160
 IMG_SHAPE = [IMG_SIZE, IMG_SIZE, 3]
-length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-print("length", length)
 
 
 def format_example(image):
     image = tf.repeat(image, 3, axis=2) / 255
     image = tf.image.resize(image, IMG_SHAPE[0:2])
-    # image = tf.image.per_image_standardization(image)
-    # image.set_shape([None] + IMG_SHAPE)
     return image
 
 
-t = time.time()
-font = cv2.FONT_HERSHEY_SIMPLEX
 ms_counter = time.time()
 buffer_counter = 0
 max_frames = 16
-n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-curr_frame_nr = 0
-ms_per_frame = 100
+s_per_frame = 100 / 1000
 net_input = np.zeros(([1, max_frames] + IMG_SHAPE))
 ret = True
-pred_label = "Not enought data"
-c = 0
+pred_label = "Not enough data"
+pred_prob = ["0"]
+pred_ind = 0
 writer = None
 
 while True:
     ret, frame = cap.read()
+    print(frame.shape)
+    if USE_CAMERA:  # Crop the camera feed
+        frame = frame[100:-60, 108:-108, :]  # crops for Mustafa's camera
     # if making a prediciont every 100ms then sleep must happen must be turned on
     time.sleep(0.025)
     if ret:
         # down_sampled_frame = cv2.resize(frame, (160, 160))
-        # curr_frame_nr = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) + 1
         # print(curr_frame_nr, n_frames)
         # gray = down_sampled_frame.copy()
         # # gray = gray.res (160,160)
         # # gray = np.repeat(gray[:, :, np.newaxis], 3, axis=2)
-        if time.time() - ms_counter > 0.1:
+        if time.time() - ms_counter > s_per_frame:
             # print(time.time() - ms_counter)
             ms_counter = time.time()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -93,7 +94,10 @@ while True:
         # x = np.asarray(buffer)
         if buffer_counter + 1 > max_frames:
             buffer_counter = 0
-            pred_ind = np.argmax(model(net_input).numpy()[0])
+            pred_prob = np.round(tf.keras.activations.softmax(
+                model(net_input)).numpy()[0] * 100, decimals=1)
+            print(pred_prob)
+            pred_ind = np.argmax(pred_prob)
             pred_label = labels[pred_ind]
             # print("Making a prediction", pred_label)
 
@@ -119,13 +123,14 @@ while True:
             # if time.time() - t > 10:
             #     break
         # write the output frame to disk
-        cv2.putText(frame, "Prediction: " + pred_label, (2, 25),
-                    font, 0.3, (0, 255, 0), 1, cv2.LINE_AA)
+        cv2.putText(frame, "Prediction: " + pred_label + " " + str(pred_prob[pred_ind]) + "%", (2, 25),
+
+                    font, font_size, (0, 255, 0), 2, cv2.LINE_AA)
         if writer is None:
             # initialize our video writer
             fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-            writer = cv2.VideoWriter('./videos/pred_output_5.avi', fourcc, 25,
-                                     (160, 120), True)
+            writer = cv2.VideoWriter('./videos/pred_output_6.avi', fourcc, 25,
+                                     (frame.shape[1], frame.shape[0]), True)
         writer.write(frame)
 
         cv2.imshow('frame', frame)
