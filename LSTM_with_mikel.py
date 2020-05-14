@@ -8,6 +8,11 @@ import sys
 sys.path.insert(0, os.path.dirname('.'))
 sys.path.insert(0, os.path.dirname('../'))
 
+# gpus = tf.config.experimental.list_physical_devices('GPU')
+# if gpus:
+#     for gpu in gpus:
+#         tf.config.experimental.set_memory_growth(gpu, True)
+
 from data_utils import video_to_frames
 from data_utils import metadata_loader
 from data_utils.kth_dataset_builder import DatasetBuilder
@@ -86,11 +91,14 @@ def My_Video_Classifier(features, class_nr, optimizer='adam'):
     return full_model
 
 
+from training import tuned_inception
+
 # Base model (returns pretrained frozen base model trained on Imagenet)
-inception = Imagenet(input_shape=IMG_SHAPE, name='inception')
+# inception = Imagenet(input_shape=IMG_SHAPE, name='inception')
+inception_tuned = tuned_inception.load_model()
 
 # Feature Extractor (Has output (NR_FRAME x D) where D is feature dimension)
-featuer_ex = Video_Feature_Extractor(inception)
+featuer_ex = Video_Feature_Extractor(inception_tuned)
 
 # LSTM Clasifier
 model = My_Video_Classifier(features=featuer_ex, class_nr=6)
