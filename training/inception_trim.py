@@ -44,8 +44,8 @@ def train_model():
     USE_TRIMMED = False  # use the trimmed larger data set of KTH videos
 
     if USE_TRIMMED:
-        video_path = './data/kth-actions/video_trimmeds'
-        frame_path = './data/kth-actions/frame_trimmeds'
+        video_path = './data/kth-actions/video_trimmed'
+        frame_path = './data/kth-actions/frame_trimmed'
     else:
         video_path = './data/kth-actions/video'
         frame_path = './data/kth-actions/frame'
@@ -99,8 +99,8 @@ def test_model():
     USE_TRIMMED = True  # use the trimmed larger data set of KTH videos
 
     if USE_TRIMMED:
-        video_path = './data/kth-actions/video_trimmeds'
-        frame_path = './data/kth-actions/frame_trimmeds'
+        video_path = './data/kth-actions/video_trimmed'
+        frame_path = './data/kth-actions/frame_trimmed'
     else:
         video_path = './data/kth-actions/video'
         frame_path = './data/kth-actions/frame'
