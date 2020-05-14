@@ -2,9 +2,12 @@
 python3 live_demo.py -o here.avi -m ../models/trained_models/LSTM_50epochs_trimmed/ \
     -i ../data/kth-actions/video/handwaving/person03_handwaving_d1_uncomp.avi
 """
+import os
+import sys
+sys.path.insert(0, os.path.dirname('.'))
+sys.path.insert(0, os.path.dirname('../'))
+from training.loading import model_load
 
-
-from tensorflow.keras.models import load_model
 from collections import deque
 import numpy as np
 import argparse
@@ -32,7 +35,7 @@ def main():
     args = vars(ap.parse_args())
 
     print("[INFO] loading model ...")
-    model = load_model(args["model"])
+    model = model_load(args["model"])
     lb = ["boxing","handclapping", "handwaving","jogging", "running","walking"]
 
     Buffer = deque(maxlen=args["buffer_size"]) #frame buffer
@@ -89,9 +92,9 @@ def main():
             fourcc = cv2.VideoWriter_fourcc(*"MJPG")
             writer = cv2.VideoWriter(args["output"], fourcc, 30,
                 (W, H), True)
+            writer.write(output)
         else:
             time.sleep(0.1)
-        writer.write(output)
 
         # break if the `q` key is pressed-*
         if key == ord("q"): 
