@@ -32,12 +32,21 @@ def Video_Feature_Extractor(base_model):
     # returns an [BATCH x FRAME_NR x D] tensor where D is the dimension of the features
     feature_extractor = tf.keras.Sequential([
         base_model,
-        GlobalAveragePooling2D()
+        # GlobalAveragePooling2D()
+        # tf.keras.layers.MaxPool2D((5,))
+        tf.keras.layers.Flatten()
+        # tf.keras.layers.Reshape((-1,))
         ])
+    
+
+    if len(base_model.layers[0].input_shape) == 1:
+        input_shape = base_model.layers[0].input_shape[0]
+    else:
+        input_shape = base_model.layers[0].input_shape
 
     features = TimeDistributed(
         layer = feature_extractor,
-        input_shape = base_model.layers[0].input_shape[0]
+        input_shape = input_shape
         )
 
     return  tf.keras.Sequential([features])
@@ -46,13 +55,13 @@ def LSTM_Video_Classifier(features, class_nr, optimizer='adam'):
     # model
     full_model = tf.keras.Sequential([
         features,
-        Dense(128, kernel_initializer="he_normal"),
+        # Dense(128, kernel_initializer="he_normal"),
         LSTM(128, input_shape=(None,256)),
         Dense(512, kernel_initializer="he_normal"),
         BatchNormalization(),
         Dense(class_nr)
         ])
-    
+
     #compile model
     full_model.compile(
         optimizer=optimizer,
@@ -68,7 +77,7 @@ def AVG_Video_Classifier(features, class_nr, optimizer='adam'):
         GlobalAveragePooling1D(),
         Dense(2048, kernel_initializer="he_normal"),
         Dense(class_nr, kernel_initializer="he_normal")])
-    
+
     #compile model
     full_model.compile(
         optimizer=optimizer,

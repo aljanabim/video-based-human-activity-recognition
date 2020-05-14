@@ -42,7 +42,7 @@ from config import Config
 from data_utils.metadata_loader import MetadataLoader
 import tensorflow as tf
 import os
-
+import random
 
 class DatasetBuilder:
     """Used to build datasets."""
@@ -79,16 +79,6 @@ class DatasetBuilder:
             return tf.image.resize(frame, [img_width, img_height])
 
         def _process_path(file_path):
-            # ------------------------------------------------
-            # parts = tf.strings.split(file_path, sep="\\")
-            # label = action_label_table.lookup(parts[-2])
-            # tf.print(label)
-            # label_tensor = tf.one_hot(label, n_classes, dtype=tf.int32)
-            # img = tf.io.read_file(file_path)
-            # img = tf.image.decode_jpeg(img, channels=3)
-            # img = tf.image.convert_image_dtype(img, tf.float32)
-            # frame = tf.image.resize(img, [img_width, img_height])
-
             label = _get_label(file_path)
             label_tensor = _make_one_hot_encoding(label)
             img = tf.io.read_file(file_path)  # from einar's script
@@ -123,6 +113,21 @@ class DatasetBuilder:
     def _dataset_from_folder(self, file):
         return tf.data.Dataset.list_files(file + "/*", shuffle=False)
 
+    def _slice_from_folder(self, file):
+        slice = tf.py_function(self._py_slice_from_folder, [file], tf.string)
+
+        return tf.data.Dataset.list_files(slice)
+
+    def _py_slice_from_folder(self, file):
+        frames = tf.io.gfile.listdir(file.numpy())
+        frames = [file + '/' + frame for frame in frames]
+        n_frames = len(frames)
+        if n_frames <= self.max_frames:
+            slice = frames
+        else:
+            r = random.randint(0, n_frames - self.max_frames)
+            slice = frames[r:r + self.max_frames]
+
     def _build_pad_function(self, max_frames):
 
         def _pad(stacked_im, label):
@@ -148,6 +153,7 @@ class DatasetBuilder:
         # creates a dataset containing frame folder paths
         frame_folder_paths = [self.frame_path +
                               "/" + id for id in video_id_list]
+        random.shuffle(frame_folder_paths)
         frame_folder_paths_dataset = tf.data.Dataset.from_tensor_slices(
             frame_folder_paths)
 

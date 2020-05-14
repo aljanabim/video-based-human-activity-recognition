@@ -1,2 +1,2 @@
-model_checkpoint_path: "basic_cnn_lite_3"
-all_model_checkpoint_paths: "basic_cnn_lite_3"
+model_checkpoint_path: "basic_cnn_lite"
+all_model_checkpoint_paths: "basic_cnn_lite"
