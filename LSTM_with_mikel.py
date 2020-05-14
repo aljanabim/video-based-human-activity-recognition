@@ -17,6 +17,8 @@ from data_utils import video_to_frames
 from data_utils import metadata_loader
 from data_utils.kth_dataset_builder import DatasetBuilder
 
+
+from training import inception_tuned
 from models.IMAGENET import Imagenet, Video_Feature_Extractor
 from models.IMAGENET import AVG_Video_Classifier, LSTM_Video_Classifier
 
@@ -91,7 +93,7 @@ def My_Video_Classifier(features, class_nr, optimizer='adam'):
     return full_model
 
 
-from training import tuned_inception
+
 
 # Base model (returns pretrained frozen base model trained on Imagenet)
 # inception = Imagenet(input_shape=IMG_SHAPE, name='inception')
