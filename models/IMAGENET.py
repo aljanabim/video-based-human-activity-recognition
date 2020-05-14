@@ -5,7 +5,6 @@ from tensorflow.keras.optimizers import RMSprop
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.regularizers import l2
 
-
 def Imagenet(input_shape=(160,160,3), name ='inception', weights=False, trainable=False, include_top=False):
     # Create the base model pre-trained on imagenet
     # the pretrained models come with input_shape = (160, 160, 3)
@@ -20,6 +19,18 @@ def Imagenet(input_shape=(160,160,3), name ='inception', weights=False, trainabl
     elif name=='inception':
         # D = 2048
         base_model = tf.keras.applications.InceptionV3(
+                                                input_shape=input_shape,
+                                                include_top=include_top,
+                                                weights='imagenet')
+    elif name=='vgg':
+        # D = 2048
+        base_model = tf.keras.applications.VGG16(
+                                                input_shape=input_shape,
+                                                include_top=include_top,
+                                                weights='imagenet')
+    elif name=='resnet':
+        # D = 2048
+        base_model = tf.keras.applications.ResNet50(
                                                 input_shape=input_shape,
                                                 include_top=include_top,
                                                 weights='imagenet')
@@ -46,7 +57,6 @@ def LSTM_Video_Classifier(features, class_nr, optimizer='adam'):
     # model
     full_model = tf.keras.Sequential([
         features,
-        Dense(128, kernel_initializer="he_normal"),
         LSTM(128, input_shape=(None,256)),
         Dense(512, kernel_initializer="he_normal"),
         BatchNormalization(),
@@ -93,34 +103,38 @@ AVG_Video_Classifier(): returns an example model on how to use the returned fram
 
 if __name__ == "__main__":
     # 1)Get pretrained Base Model (either inception or mobilnet which is untrainable per default)
-    inception = Imagenet(name='inception')
-    mobilnet = Imagenet(name='mobilnet')
+    # inception = Imagenet(name='inception')
+    # mobilnet = Imagenet(name='mobilnet')
+    resnet = Imagenet(name='vgg')
     # inception.summary()
 
-    # 2)Get the Featuer Extractor (calculates one feature for each frame using the base model)
-    featuer_ex1 = Video_Feature_Extractor(inception)
-    featuer_ex2 = Video_Feature_Extractor(mobilnet)
+    # # 2)Get the Featuer Extractor (calculates one feature for each frame using the base model)
+    # featuer_ex1 = Video_Feature_Extractor(inception)
+    # featuer_ex2 = Video_Feature_Extractor(mobilnet)
+    featuer_ex3 = Video_Feature_Extractor(resnet)
     # featuer_ex.summary()
 
     # 3)Get the Video Classifiers (add a classifying model on top which can trained on given data)
-    lstm_video_classifier = LSTM_Video_Classifier(features=featuer_ex1, class_nr=6, optimizer=RMSprop(lr=0.0001))
+    lstm_video_classifier = LSTM_Video_Classifier(features=featuer_ex3, class_nr=6, optimizer=RMSprop(lr=0.0001))
     lstm_video_classifier.summary()
 
-    avg_video_classifier = AVG_Video_Classifier(features=featuer_ex2, class_nr=6, optimizer=RMSprop(lr=0.0001))
-    avg_video_classifier.summary()
+    # avg_video_classifier = AVG_Video_Classifier(features=featuer_ex2, class_nr=6, optimizer=RMSprop(lr=0.0001))
+    # avg_video_classifier.summary()
 
-    # How to save
-    print("PREDICT:",lstm_video_classifier.predict(np.ones((1,16,160,160,3))))
-    print("SAVING")
-    # Save only weights
-    lstm_video_classifier.save_weights("bullshit/")
-    lstm_video_classifier = None
 
-    print("LOADING")
-    # Create model
-    inception = Imagenet(name='inception')
-    featuer_ex1 = Video_Feature_Extractor(inception)
-    model = LSTM_Video_Classifier(features=featuer_ex1, class_nr=6, optimizer=RMSprop(lr=0.0001))
-    # load weights
-    model.load_weights("bullshit/")
-    print("PREDICT:",model(np.ones((1,16,160,160,3))))
+    # ####
+    # # How to save
+    # print("PREDICT:",lstm_video_classifier.predict(np.ones((1,16,160,160,3))))
+    # print("SAVING")
+    # # Save only weights
+    # lstm_video_classifier.save_weights("bullshit/")
+    # lstm_video_classifier = None
+    
+    # print("LOADING")
+    # # Create model
+    # inception = Imagenet(name='inception')
+    # featuer_ex1 = Video_Feature_Extractor(inception)
+    # model = LSTM_Video_Classifier(features=featuer_ex1, class_nr=6, optimizer=RMSprop(lr=0.0001))
+    # # load weights
+    # model.load_weights("bullshit/")
+    # print("PREDICT:",model(np.ones((1,16,160,160,3))))

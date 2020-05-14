@@ -2,9 +2,12 @@
 python3 live_demo.py -o here.avi -m ../models/trained_models/LSTM_50epochs_trimmed/ \
     -i ../data/kth-actions/video/handwaving/person03_handwaving_d1_uncomp.avi
 """
+import os
+import sys
+sys.path.insert(0, os.path.dirname('.'))
+sys.path.insert(0, os.path.dirname('../'))
+from training.loading import model_load
 
-
-from tensorflow.keras.models import load_model
 from collections import deque
 import numpy as np
 import argparse
@@ -32,12 +35,11 @@ def main():
     args = vars(ap.parse_args())
 
     print("[INFO] loading model ...")
-    model = load_model(args["model"])
+    model = model_load(args["model"])
     lb = ["boxing","handclapping", "handwaving","jogging", "running","walking"]
 
     Buffer = deque(maxlen=args["buffer_size"]) #frame buffer
     Q = deque(maxlen=args["size"]) #prediction buffer
-
 
     # initialize the video stream(input video or camera)
     if args["input"] is not None:
@@ -46,16 +48,11 @@ def main():
         vs = cv2.VideoCapture(0) #<--- camera
 
     label = ""
-
-
     writer = None #pointer to output video file
     (W, H) = (None, None)
-
     counter =0
     while True:
-
         counter =np.mod(counter+1,1999)
-
         (grabbed, frame) = vs.read()
         # if the frame was not grabbed, then we have reached the end
         # of the stream
@@ -70,7 +67,6 @@ def main():
         model_input = cv2.resize(frame,(160,160))
         model_input = cv2.cvtColor(model_input, cv2.COLOR_BGR2GRAY)[:,:,np.newaxis]
         Buffer.append(cv2.resize(model_input,(160,160)))
-
 
         output = frame.copy()
         if len(Buffer)==16 and np.mod(counter, 5):
@@ -90,16 +86,15 @@ def main():
         cv2.imshow("Output", output)
         key = cv2.waitKey(1) & 0xFF
         
-
         # write the output frames to disk
         if writer is None and args["output"] is not None:
             # initialize our video writer
             fourcc = cv2.VideoWriter_fourcc(*"MJPG")
             writer = cv2.VideoWriter(args["output"], fourcc, 30,
                 (W, H), True)
+            writer.write(output)
         else:
             time.sleep(0.1)
-        writer.write(output)
 
         # break if the `q` key is pressed-*
         if key == ord("q"): 
