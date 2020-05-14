@@ -111,28 +111,14 @@ def test_model():
 
     valid_ds = builder.make_frame_dataset(metadata=metadata['valid'])
     valid_ds_scaled = valid_ds.map(format_example).batch(100)
-
-    onehot_targets = [sample[1].numpy() for sample in valid_ds_scaled.take(30)]
-    onehot_targets = np.concatenate(onehot_targets, axis=0)
-    targets = np.argmax(onehot_targets, axis=1)
+    test_ds = builder.make_frame_dataset(metadata=metadata['test'])
+    test_ds_scaled = test_ds.map(format_example).batch(100)
 
     model = tf.keras.models.load_model("./models/trained_models/{}".format(MODEL_NAME))
 
-    onehot_preds = model.predict(valid_ds_scaled.take(30))
-    preds = np.argmax(onehot_preds, axis=1)
-    conf = confusion_matrix(targets, preds)
-
-    ax = plt.subplot()
-    sns.heatmap(conf, annot=True, ax=ax, cmap=sns.cubehelix_palette(8), fmt='g',
-        xticklabels=['boxing', 'handclapping', 'handwaving', 'jogging', 'running', 'walking'],
-        yticklabels=['boxing', 'handclapping', 'handwaving', 'jogging', 'running', 'walking'])
-    ax.set_xlabel('Predicted labels')
-    ax.set_ylabel('True labels')
-
-    ax.set_title('Confusion Matrix')
-    plt.show()
-
-    # model.evaluate(valid_ds_scaled)
+    confusion_matrix(model, valid_ds_scaled)
+    model.evaluate(valid_ds_scaled)
+    model.evaluate(test_ds_scaled)
 
 
 def load_model(include_top=False):
