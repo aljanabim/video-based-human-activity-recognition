@@ -34,7 +34,7 @@ else:
 # video_path = '../data/kth-actions/video'
 # frame_path = '../data/kth-actions/frame'
 builder = DatasetBuilder(video_path, frame_path, img_width=120,
-                         img_height=120, ms_per_frame=1000, max_frames=16)
+                         img_height=120, ms_per_frame=100, max_frames=16)
 
 # Convert videos and generate metadata
 # builder.convert_videos_to_frames()
@@ -105,9 +105,29 @@ model.fit(train_ds.shuffle(80).batch(14).prefetch(1),
 model.save('trained_models/LSTM_50epochs_trimmed')
 # %%
 avg = 0
-for i in range(100):
+for i in range(10):
     avg += model.evaluate(valid_ds.batch(1))[1]
-print(avg / 100)
+print(avg / 10)
 
 # Last avg with 50 epochs and untrimmed data set gives 0.6695555579662323
 # Last avg with 50 epochs and trimmed data set gives 0.7825069636106491
+# %%
+# Test loaded model
+
+saved_model = tf.keras.models.load_model(
+    './training/trained_models/LSTM_50epochs_trimmed', compile=True)
+
+# %%
+test_point = next(iter(train_ds.shuffle(100).batch(1)))
+label_true = test_point[1]
+label_pred_vec = model(test_point[0]).numpy()
+label_pred_ind = np.argmax(model(test_point[0]).numpy())
+print(label_true, "\n", label_pred_ind, label_pred_vec)
+
+# %%
+# for x, lab in valid_ds.batch(1).take(10):
+#     y = tf.keras.activations.softmax(model(x))
+#     print(np.argmax(lab), np.argmax(y.numpy()))
+sax = next(iter(valid_ds.batch(1).take(1)))[0]
+# print(sax.shape)
+print(np.max(sax[0, 0, :, :, 1]))
