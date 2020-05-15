@@ -148,12 +148,12 @@ def plot(history, y_pred, y_test):
     axs[1].set_title("Model Loss")
     axs[1].legend(loc="bottom left")
     fig.tight_layout(pad=2.0)
-    fig.savefig('plots/SVM_70epochs_untrimmed_tuned_acc_loss.pdf')
+    fig.savefig('plots/SVM_70epochs_trimmed_untuned_acc_loss.pdf')
     plt.show()
     cmat = confusion_matrix(y_test, y_pred)
     cmat_plot = plot_confusion_matrix(conf_mat=cmat, figsize=(5, 5),
                                       class_names=CLASS_NAMES)
-    plt.savefig('plots/SVM_70epochs_untrimmed_tuned_cmat.pdf',
+    plt.savefig('plots/SVM_70epochs_trimmed_untuned_cmat.pdf',
                 bbox_inches='tight')
     return [acc, acc_val, loss, loss_val]
 
@@ -164,11 +164,11 @@ y_test = [np.argmax(l.numpy()) for _, l in test_ds.batch(1)]
 y_pred = full_model.predict_classes(test_ds.batch(1))
 y_pred_tuned = full_model_tuned.predict_classes(test_ds.batch(1))
 # %% GET PLOT
-logs = plot(history_tuned_saved, y_pred_tuned, y_test)
+logs = plot(history_saved, y_pred, y_test)
 
 
 # %% SAVE LOGS
-save_logs_to = './logs/SVM_70epochs_untrimmed_tuned.pkl'
+save_logs_to = './logs/SVM_70epochs_trimmed_untuned.pkl'
 overwrite = False
 save = True
 if os.path.exists(save_logs_to):
