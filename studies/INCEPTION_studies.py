@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn-darkgrid')
 import matplotlib.gridspec as gridspec
 # pip install mlxtend
-# from mlxtend.plotting import plot_confusion_matrix
-from sklearn.metrics import confusion_matrix, plot_confusion_matrix()
+from mlxtend.plotting import plot_confusion_matrix
+from sklearn.metrics import confusion_matrix
 
 import tensorflow as tf
 from tensorflow import keras
@@ -77,20 +77,25 @@ def get_inception_model(load_tuned=False, use_SVM=False):
     if load_tuned:
         base_model.load_weights(
             "../models/checkpoints/inception_tuned/inception_tuned")
+    if use_SVM:
+        dense = keras.layers.Dense(
+            N_CLASSES, kernel_regularizer=keras.regularizers.l2(0.002))
+        loss = tf.losses.Hinge()
+        optimizer = 'RMSprop'
+    else:
+        dense = tf.keras.Sequential([keras.layers.LSTM(1024),
+                                     keras.layers.Dense(N_CLASSES)])
+        loss = tf.losses.CategoricalCrossentropy(from_logits=True)
+        optimizer = 'adam'
+
     feature_extractor = Video_Feature_Extractor(base_model)
 
     full_model = tf.keras.Sequential([
         feature_extractor,
-        keras.layers.LSTM(1024),
-        keras.layers.Dense(N_CLASSES)
+        dense
     ])
 
-    if use_SVM:
-        loss = tf.losses.hinge_loss()
-    else:
-        loss = tf.losses.CategoricalCrossentropy(from_logits=True)
-
-    full_model.compile(optimizer='adam',
+    full_model.compile(optimizer=optimizer,
                        loss=loss,
                        metrics=['accuracy'])
     return full_model
@@ -104,12 +109,11 @@ history_saved = []
 history_tuned_saved = []
 
 # %% TRAIN THE MODELS
-# history = full_model.fit(train_ds.shuffle(80).batch(14).prefetch(1),
-#                          validation_data=valid_ds.batch(1), epochs=50)
-history_tuned = full_model_tuned.fit(train_ds.shuffle(80).batch(14).prefetch(1),
-                                     validation_data=valid_ds.batch(1), epochs=50)
-# when done tot will be 120 epochs
-# history_saved.append(history)
+history = full_model.fit(train_ds.shuffle(80).batch(14).prefetch(1),
+                         validation_data=valid_ds.batch(1), epochs=20)
+# history_tuned = full_model_tuned.fit(train_ds.shuffle(80).batch(14).prefetch(1),
+#  validation_data=valid_ds.batch(1), epochs=50)
+history_saved.append(history)
 history_tuned_saved.append(history_tuned)
 # %% PLOTTING
 
@@ -158,7 +162,7 @@ y_pred_tuned = full_model_tuned.predict_classes(test_ds.batch(1))
 logs = plot(history_tuned_saved, y_pred_tuned, y_test)
 
 # %%
-save_logs_to = './logs/LSTM_70epochs_tuned.pkl'
+save_logs_to = './logs/LSTM_70epochs.pkl'
 if os.path.exists(save_logs_to):
     print("File already exits, please try another path or filename")
 
