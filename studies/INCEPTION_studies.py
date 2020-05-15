@@ -129,7 +129,7 @@ def plot(history, y_pred, y_test):
         loss += history[i].history['loss']
         loss_val += history[i].history['val_loss']
 
-    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7, 3))
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(6, 3.5))
     axs[0].plot(acc, label="Train Acc")
     axs[0].plot(acc_val, label="Valid Acc")
     axs[0].set_xlabel("Epoch")
@@ -147,6 +147,7 @@ def plot(history, y_pred, y_test):
     axs[1].set(xlim=(0, len(acc)), ylim=(0, 5))
     axs[1].set_title("Model Loss")
     axs[1].legend(loc="bottom left")
+    fig.tight_layout(pad=2.0)
     fig.savefig('plots/LSTM_70epochs_acc_loss.pdf')
     plt.show()
     cmat = confusion_matrix(y_test, y_pred)
