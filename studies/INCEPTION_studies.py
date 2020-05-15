@@ -110,11 +110,11 @@ history_tuned_saved = []
 
 # %% TRAIN THE MODELS
 history = full_model.fit(train_ds.shuffle(80).batch(14).prefetch(1),
-                         validation_data=valid_ds.batch(1), epochs=20)
+                         validation_data=valid_ds.batch(1), epochs=50)
 # history_tuned = full_model_tuned.fit(train_ds.shuffle(80).batch(14).prefetch(1),
 #  validation_data=valid_ds.batch(1), epochs=50)
 history_saved.append(history)
-history_tuned_saved.append(history_tuned)
+# history_tuned_saved.append(history_tuned)
 # %% PLOTTING
 
 
@@ -146,7 +146,7 @@ def plot(history, y_pred, y_test):
     plt.ylabel("Loss")
     plt.legend(loc="bottom left")
     plt.title("Model accuracy")
-    plt.savefig('plots/LSTM_70epochs_tuned_acc_loss.pdf', bbox_inches='tight')
+    plt.savefig('plots/LSTM_70epochs_acc_loss.pdf', bbox_inches='tight')
     plt.show()
     cmat = confusion_matrix(y_test, y_pred)
     cmat_plot = plot_confusion_matrix(conf_mat=cmat, figsize=(5, 5),
@@ -159,14 +159,27 @@ def plot(history, y_pred, y_test):
 y_test = [np.argmax(l.numpy()) for _, l in test_ds.batch(1)]
 y_pred_tuned = full_model_tuned.predict_classes(test_ds.batch(1))
 # %%
-logs = plot(history_tuned_saved, y_pred_tuned, y_test)
+logs = plot(history_saved, y_pred_tuned, y_test)
 
 # %%
 save_logs_to = './logs/LSTM_70epochs.pkl'
+overwrite = False
+save = True
 if os.path.exists(save_logs_to):
-    print("File already exits, please try another path or filename")
+    save = False
+    while True:
+        print("File already exits, please try another path or filename")
+        user_pref = input("Would you like to overwrite [y/N]")
+        if user_pref == "n" or user_pref == "N":
+            overwrite = False
+            break
+        if user_pref == "y" or user_pref == "Y":
+            overwrite = True
+            break
+        else:
+            print('Invalid input, please use "y" for yes and "N" for no')
 
-else:
+if overwrite or save:
     print("Dumping the logs to ", save_logs_to)
     with open(save_logs_to, 'wb') as f:
         obj = {
