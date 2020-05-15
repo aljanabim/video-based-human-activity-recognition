@@ -128,25 +128,26 @@ def plot(history, y_pred, y_test):
         acc_val += history[i].history['val_accuracy']
         loss += history[i].history['loss']
         loss_val += history[i].history['val_loss']
-    plt.subplot(1, 2, 1)
-    plt.plot(acc, label="Train Acc")
-    plt.plot(acc_val, label="Valid Acc")
-    plt.xlabel("Epoch")
-    plt.xlim(0, len(acc))
-    plt.ylabel("Accuracy")
-    plt.ylim(0, 1)
-    plt.legend()
-    plt.title("Model accuracy")
 
-    plt.subplot(1, 2, 2)
-    plt.plot(loss, label="Train Loss")
-    plt.plot(loss_val, label="Valid Loss")
-    plt.xlabel("Epoch")
-    plt.xlim(0, len(acc))
-    plt.ylabel("Loss")
-    plt.legend(loc="bottom left")
-    plt.title("Model accuracy")
-    plt.savefig('plots/LSTM_70epochs_acc_loss.pdf', bbox_inches='tight')
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7, 3))
+    axs[0].plot(acc, label="Train Acc")
+    axs[0].plot(acc_val, label="Valid Acc")
+    axs[0].set_xlabel("Epoch")
+    axs[0].set_ylabel("Accuracy")
+    # axs[0].axis('equal')
+    # axs[0].set_aspect('equal', 'box')
+    axs[0].set(xlim=(0, len(acc)), ylim=(0, 1))
+    axs[0].set_title("Model accuracy")
+    axs[0].legend()
+
+    axs[1].plot(loss, label="Train Loss")
+    axs[1].plot(loss_val, label="Valid Loss")
+    axs[1].set_xlabel("Epoch")
+    axs[1].set_ylabel("Loss")
+    axs[1].set(xlim=(0, len(acc)), ylim=(0, 5))
+    axs[1].set_title("Model Loss")
+    axs[1].legend(loc="bottom left")
+    fig.savefig('plots/LSTM_70epochs_acc_loss.pdf')
     plt.show()
     cmat = confusion_matrix(y_test, y_pred)
     cmat_plot = plot_confusion_matrix(conf_mat=cmat, figsize=(5, 5),
@@ -155,13 +156,14 @@ def plot(history, y_pred, y_test):
     return [acc, acc_val, loss, loss_val]
 
 
-# %%
+# %% GET PREDICTIONS
 y_test = [np.argmax(l.numpy()) for _, l in test_ds.batch(1)]
 y_pred_tuned = full_model_tuned.predict_classes(test_ds.batch(1))
-# %%
+# %% GET PLOT
 logs = plot(history_saved, y_pred_tuned, y_test)
 
-# %%
+
+# %% SAVE LOGS
 save_logs_to = './logs/LSTM_70epochs.pkl'
 overwrite = False
 save = True
