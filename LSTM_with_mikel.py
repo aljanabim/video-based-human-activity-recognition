@@ -8,9 +8,19 @@ import sys
 sys.path.insert(0, os.path.dirname('.'))
 sys.path.insert(0, os.path.dirname('../'))
 
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+
 from data_utils import video_to_frames
 from data_utils import metadata_loader
 from data_utils.kth_dataset_builder import DatasetBuilder
+
+
+from training import inception_tuned
+from training import inception_trim
+
 
 from models.IMAGENET import Imagenet, Video_Feature_Extractor
 from models.IMAGENET import AVG_Video_Classifier, LSTM_Video_Classifier
@@ -25,8 +35,8 @@ from tensorflow.keras.losses import CategoricalCrossentropy
 USE_TRIMMED = True  # use the trimmed larger data set of KTH videos
 
 if USE_TRIMMED:
-    video_path = '../data/kth-actions/video_trimmed'
-    frame_path = '../data/kth-actions/frame_trimmed'
+    video_path = './data/kth-actions/video_trimmed'
+    frame_path = './data/kth-actions/frame_trimmed'
 else:
     video_path = './data/kth-actions/video'
     frame_path = './data/kth-actions/frame'
@@ -86,11 +96,15 @@ def My_Video_Classifier(features, class_nr, optimizer='adam'):
     return full_model
 
 
+
+
 # Base model (returns pretrained frozen base model trained on Imagenet)
-inception = Imagenet(input_shape=IMG_SHAPE, name='inception')
+# inception = Imagenet(input_shape=IMG_SHAPE, name='inception')
+inception_tuned = inception_tuned.load_model()
+inception_trim = inception_trim.load_model()
 
 # Feature Extractor (Has output (NR_FRAME x D) where D is feature dimension)
-featuer_ex = Video_Feature_Extractor(inception)
+featuer_ex = Video_Feature_Extractor(inception_trim)
 
 # LSTM Clasifier
 model = My_Video_Classifier(features=featuer_ex, class_nr=6)
