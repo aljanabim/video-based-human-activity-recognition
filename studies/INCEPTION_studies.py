@@ -44,6 +44,7 @@ if USE_TRIMMED:
     video_path = '../data/kth-actions/video_trimmed'
     frame_path = '../data/kth-actions/frame_trimmed'
 else:
+    print("Using untrimmed")
     video_path = '../data/kth-actions/video'
     frame_path = '../data/kth-actions/frame'
 
@@ -78,8 +79,9 @@ def get_inception_model(load_tuned=False, use_SVM=False):
         base_model.load_weights(
             "../models/checkpoints/inception_tuned/inception_tuned")
     if use_SVM:
-        dense = keras.layers.Dense(
-            N_CLASSES, kernel_regularizer=keras.regularizers.l2(0.002))
+        dense = tf.keras.Sequential([keras.layers.GlobalAveragePooling1D(),
+                                     keras.layers.Dense(N_CLASSES,
+                                                        kernel_regularizer=keras.regularizers.l2(0.002))])
         loss = tf.losses.Hinge()
         optimizer = 'RMSprop'
     else:
@@ -101,8 +103,8 @@ def get_inception_model(load_tuned=False, use_SVM=False):
     return full_model
 
 
-full_model = get_inception_model(load_tuned=False)
-full_model_tuned = get_inception_model(load_tuned=True)
+full_model = get_inception_model(load_tuned=False, use_SVM=True)
+full_model_tuned = get_inception_model(load_tuned=True, use_SVM=True)
 
 # %% history storage
 history_saved = []
@@ -110,11 +112,11 @@ history_tuned_saved = []
 
 # %% TRAIN THE MODELS
 history = full_model.fit(train_ds.shuffle(80).batch(14).prefetch(1),
-                         validation_data=valid_ds.batch(1), epochs=50)
-# history_tuned = full_model_tuned.fit(train_ds.shuffle(80).batch(14).prefetch(1),
-#  validation_data=valid_ds.batch(1), epochs=50)
+                         validation_data=valid_ds.batch(1), epochs=70)
+history_tuned = full_model_tuned.fit(train_ds.shuffle(80).batch(14).prefetch(1),
+                                     validation_data=valid_ds.batch(1), epochs=70)
 history_saved.append(history)
-# history_tuned_saved.append(history_tuned)
+history_tuned_saved.append(history_tuned)
 # %% PLOTTING
 
 
@@ -134,8 +136,6 @@ def plot(history, y_pred, y_test):
     axs[0].plot(acc_val, label="Valid Acc")
     axs[0].set_xlabel("Epoch")
     axs[0].set_ylabel("Accuracy")
-    # axs[0].axis('equal')
-    # axs[0].set_aspect('equal', 'box')
     axs[0].set(xlim=(0, len(acc)), ylim=(0, 1))
     axs[0].set_title("Model accuracy")
     axs[0].legend()
@@ -144,28 +144,31 @@ def plot(history, y_pred, y_test):
     axs[1].plot(loss_val, label="Valid Loss")
     axs[1].set_xlabel("Epoch")
     axs[1].set_ylabel("Loss")
-    axs[1].set(xlim=(0, len(acc)), ylim=(0, 1.2))
+    axs[1].set(xlim=(0, len(acc)))
     axs[1].set_title("Model Loss")
     axs[1].legend(loc="bottom left")
     fig.tight_layout(pad=2.0)
-    fig.savefig('plots/LSTM_70epochs_trimmed_acc_loss.pdf')
+    fig.savefig('plots/SVM_70epochs_untrimmed_tuned_acc_loss.pdf')
     plt.show()
     cmat = confusion_matrix(y_test, y_pred)
     cmat_plot = plot_confusion_matrix(conf_mat=cmat, figsize=(5, 5),
                                       class_names=CLASS_NAMES)
-    plt.savefig('plots/LSTM_70epochs_trimmed_cmat.pdf', bbox_inches='tight')
+    plt.savefig('plots/SVM_70epochs_untrimmed_tuned_cmat.pdf',
+                bbox_inches='tight')
     return [acc, acc_val, loss, loss_val]
 
 
-# %% GET PREDICTIONS
+# %% GET TEST LABLES
 y_test = [np.argmax(l.numpy()) for _, l in test_ds.batch(1)]
+# %% GET NETWORK PREDICTIONS
+y_pred = full_model.predict_classes(test_ds.batch(1))
 y_pred_tuned = full_model_tuned.predict_classes(test_ds.batch(1))
 # %% GET PLOT
-logs = plot(history_saved, y_pred_tuned, y_test)
+logs = plot(history_tuned_saved, y_pred_tuned, y_test)
 
 
 # %% SAVE LOGS
-save_logs_to = './logs/LSTM_70epochs_trimmed.pkl'
+save_logs_to = './logs/SVM_70epochs_untrimmed_tuned.pkl'
 overwrite = False
 save = True
 if os.path.exists(save_logs_to):
