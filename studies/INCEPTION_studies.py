@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn-darkgrid')
 import matplotlib.gridspec as gridspec
 # pip install mlxtend
-from mlxtend.plotting import plot_confusion_matrix
-from sklearn.metrics import confusion_matrix
+# from mlxtend.plotting import plot_confusion_matrix
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix()
 
 import tensorflow as tf
 from tensorflow import keras
@@ -72,7 +72,7 @@ test_ds = test_ds.map(format_example)
 # %% LOADING THE TUNED AND UNTUNED INCEPTION V3 MODELS
 
 
-def get_inception_model(load_tuned=False):
+def get_inception_model(load_tuned=False, use_SVM=False):
     base_model = Imagenet(input_shape=IMG_SHAPE, name='inception')
     if load_tuned:
         base_model.load_weights(
@@ -85,9 +85,13 @@ def get_inception_model(load_tuned=False):
         keras.layers.Dense(N_CLASSES)
     ])
 
+    if use_SVM:
+        loss = tf.losses.hinge_loss()
+    else:
+        loss = tf.losses.CategoricalCrossentropy(from_logits=True)
+
     full_model.compile(optimizer='adam',
-                       loss=tf.losses.CategoricalCrossentropy(
-                           from_logits=True),
+                       loss=loss,
                        metrics=['accuracy'])
     return full_model
 
@@ -154,12 +158,18 @@ y_pred_tuned = full_model_tuned.predict_classes(test_ds.batch(1))
 logs = plot(history_tuned_saved, y_pred_tuned, y_test)
 
 # %%
-with open('./logs/LSTM_70epochs_tuned.pkl', 'wb') as f:
-    obj = {
-        'acc': logs[0],
-        'acc_val': logs[1],
-        'loss': logs[2],
-        'loss_val': logs[3],
-        'y_test': y_test,
-        'y_pred': y_pred_tuned}
-    pickle.dump(obj, f)
+save_logs_to = './logs/LSTM_70epochs_tuned.pkl'
+if os.path.exists(save_logs_to):
+    print("File already exits, please try another path or filename")
+
+else:
+    print("Dumping the logs to ", save_logs_to)
+    with open(save_logs_to, 'wb') as f:
+        obj = {
+            'acc': logs[0],
+            'acc_val': logs[1],
+            'loss': logs[2],
+            'loss_val': logs[3],
+            'y_test': y_test,
+            'y_pred': y_pred_tuned}
+        pickle.dump(obj, f)
