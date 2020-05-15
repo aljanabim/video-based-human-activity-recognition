@@ -144,16 +144,16 @@ def plot(history, y_pred, y_test):
     axs[1].plot(loss_val, label="Valid Loss")
     axs[1].set_xlabel("Epoch")
     axs[1].set_ylabel("Loss")
-    axs[1].set(xlim=(0, len(acc)), ylim=(0, 5))
+    axs[1].set(xlim=(0, len(acc)), ylim=(0, 1.2))
     axs[1].set_title("Model Loss")
     axs[1].legend(loc="bottom left")
     fig.tight_layout(pad=2.0)
-    fig.savefig('plots/LSTM_70epochs_acc_loss.pdf')
+    fig.savefig('plots/LSTM_70epochs_trimmed_acc_loss.pdf')
     plt.show()
     cmat = confusion_matrix(y_test, y_pred)
     cmat_plot = plot_confusion_matrix(conf_mat=cmat, figsize=(5, 5),
                                       class_names=CLASS_NAMES)
-    plt.savefig('plots/LSTM_70epochs_cmat.pdf', bbox_inches='tight')
+    plt.savefig('plots/LSTM_70epochs_trimmed_cmat.pdf', bbox_inches='tight')
     return [acc, acc_val, loss, loss_val]
 
 
@@ -165,7 +165,7 @@ logs = plot(history_saved, y_pred_tuned, y_test)
 
 
 # %% SAVE LOGS
-save_logs_to = './logs/LSTM_70epochs.pkl'
+save_logs_to = './logs/LSTM_70epochs_trimmed.pkl'
 overwrite = False
 save = True
 if os.path.exists(save_logs_to):
