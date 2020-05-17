@@ -148,12 +148,12 @@ def plot(history, y_pred, y_test):
     axs[1].set_title("Model Loss")
     axs[1].legend(loc="bottom left")
     fig.tight_layout(pad=2.0)
-    fig.savefig('plots/SVM_70epochs_trimmed_untuned_acc_loss.pdf')
+    fig.savefig('plots/C3D_70epochs_untrimmed_50frames_acc_loss.pdf')
     plt.show()
     cmat = confusion_matrix(y_test, y_pred)
     cmat_plot = plot_confusion_matrix(conf_mat=cmat, figsize=(5, 5),
                                       class_names=CLASS_NAMES)
-    plt.savefig('plots/SVM_70epochs_trimmed_untuned_cmat.pdf',
+    plt.savefig('plots/C3D_70epochs_untrimmed_50frames_cmat.pdf',
                 bbox_inches='tight')
     return [acc, acc_val, loss, loss_val]
 
@@ -164,7 +164,22 @@ y_test = [np.argmax(l.numpy()) for _, l in test_ds.batch(1)]
 y_pred = full_model.predict_classes(test_ds.batch(1))
 y_pred_tuned = full_model_tuned.predict_classes(test_ds.batch(1))
 # %% GET PLOT
-logs = plot(history_saved, y_pred, y_test)
+manually = False
+if manually:
+    with open('./un_trimmed_c3d_120_120_50frames/C3D_70epochs_untrimmed.pkl', 'rb') as file:
+        log = pickle.load(file)
+    log['accuracy'] = log['acc']
+    log['val_accuracy'] = log['acc_val']
+    log['val_loss'] = log['loss_val']
+
+    class tmp():
+        def __init__(self, log):
+            self.history = log
+
+    history_saved = tmp(log)
+    logs = plot([history_saved], log['y_pred'], log['y_test'])
+else:
+    logs = plot(history_saved, y_pred, y_test)
 
 
 # %% SAVE LOGS
