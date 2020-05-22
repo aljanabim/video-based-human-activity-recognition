@@ -107,7 +107,7 @@ def test_model():
     plt.show()
 
 
-def load_model(include_top=False):
+def load_model(include_top=False,path=""):
     # model = tf.keras.models.load_model(".\\models\\trained_models\\inception_tuned")
     # model.save_weights("./models/checkpoints/inception_tuned/inception_tuned")
     base_model = keras.applications.inception_v3.InceptionV3(weights='imagenet', include_top=False)
@@ -120,7 +120,7 @@ def load_model(include_top=False):
         model = keras.models.Model(inputs=base_model.input, outputs=predictions)
     else:
         model = keras.models.Model(inputs=base_model.input, outputs=base_model.output)
-    model.load_weights("./models/checkpoints/inception_tuned/inception_tuned")
+    model.load_weights(path+"models/checkpoints/inception_tuned/inception_tuned")
     model.trainable = False
     return model
 

@@ -63,33 +63,21 @@ def Small_C3D(input_shape, n_classes):
     # try out models( much smaller than the original one)
     model = tf.keras.Sequential()
 
-    model.add(Conv3D(32, kernel_size=(3, 3, 3), input_shape=input_shape, padding="same", activation='relu', name="1"))
-    model.add(MaxPool3D(pool_size=(2, 2, 1), strides=(1,2,2), padding="valid", name="2"))
-    model.add(Dropout(0.25, name="3"))
-
-    model.add(Conv3D(64, padding="same", kernel_size=(3, 3, 3), activation='relu', name="4"))
+    model.add(Conv3D(16, kernel_size=(3, 3, 3), input_shape=input_shape, padding="same", activation='relu', name="1"))
+    model.add(Conv3D(32, padding="same", kernel_size=(3, 3, 3), activation='relu', name="4"))
     model.add(MaxPool3D(pool_size=(3, 3, 3), padding="same", name="5"))
-    model.add(Dropout(0.25, name="6"))
 
-    model.add(Conv3D(128, padding="same", kernel_size=(3, 3, 3), activation='relu', name="7"))
-    model.add(MaxPool3D(pool_size=(3, 3, 3),padding="same", name="8"))
-    model.add(Dropout(0.25, name="9"))
-
-    model.add(Conv3D(256, padding="same", kernel_size=(3, 3, 3), activation='relu', name="10"))
+    model.add(Conv3D(64, padding="same", kernel_size=(3, 3, 3), activation='relu', name="7"))
+    model.add(Conv3D(128, padding="same", kernel_size=(3, 3, 3), activation='relu', name="10"))
     model.add(MaxPool3D(pool_size=(3, 3, 3), padding="same", name="11"))
-    model.add(Dropout(0.25, name="12"))
-
+    
+    model.add(BatchNormalization())
     model.add(Flatten(name="13"))
+    model.add(Dense(n_classes, kernel_regularizer=l2(0.0026)))
 
-    model.add(Dense(1024, activation='relu', name="14"))
-    model.add(Dropout(0.5))
-
-    model.add(Dense(n_classes, activation='softmax', name="15"))
-
-    model.compile(
-        optimizer='rmsprop',
-        loss=tf.keras.losses.CategoricalCrossentropy(),
-        metrics=['accuracy'])
+    model.compile(loss='hinge',
+                       optimizer='RMSprop',
+                       metrics=['accuracy'])
     return model
 
 def Bigger_C3D(input_shape, n_classes):
